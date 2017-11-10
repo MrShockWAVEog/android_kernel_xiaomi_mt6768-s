@@ -564,6 +564,7 @@ static inline void update_vsyscall(struct timekeeper *tk)
 	update_vsyscall_old(&xt, &wm, tk->tkr_mono.clock, tk->tkr_mono.mult,
 			    tk->tkr_mono.cycle_last);
 }
+EXPORT_SYMBOL_GPL(ktime_get_real_fast_ns);
 
 static inline void old_vsyscall_fixup(struct timekeeper *tk)
 {
