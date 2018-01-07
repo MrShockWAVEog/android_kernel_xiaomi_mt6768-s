@@ -3550,6 +3550,7 @@ static int addrconf_notify(struct notifier_block *this, unsigned long event,
 		} else if (event == NETDEV_CHANGE) {
 			if (!addrconf_link_ready(dev)) {
 				/* device is still not ready. */
+				rt6_sync_down_dev(dev, event);
 				break;
 			}
 
@@ -3561,6 +3562,7 @@ static int addrconf_notify(struct notifier_block *this, unsigned long event,
 					 * multicast snooping switches
 					 */
 					ipv6_mc_up(idev);
+					rt6_sync_up(dev, RTNH_F_LINKDOWN);
 					break;
 				}
 				idev->if_flags |= IF_READY;
