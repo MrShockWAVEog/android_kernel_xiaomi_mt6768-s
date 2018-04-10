@@ -25,6 +25,8 @@
 #include <asm/tlbflush.h>
 #include "internal.h"
 
+#define SEQ_PUT_DEC(str, val) \
+		seq_put_decimal_ull_width(m, str, (val) << (PAGE_SHIFT-10), 8)
 void task_mem(struct seq_file *m, struct mm_struct *mm)
 {
 	unsigned long text, lib, swap, anon, file, shmem;
@@ -51,37 +53,26 @@ void task_mem(struct seq_file *m, struct mm_struct *mm)
 	text = (PAGE_ALIGN(mm->end_code) - (mm->start_code & PAGE_MASK)) >> 10;
 	lib = (mm->exec_vm << (PAGE_SHIFT-10)) - text;
 	swap = get_mm_counter(mm, MM_SWAPENTS);
-	seq_printf(m,
-		"VmPeak:\t%8lu kB\n"
-		"VmSize:\t%8lu kB\n"
-		"VmLck:\t%8lu kB\n"
-		"VmPin:\t%8lu kB\n"
-		"VmHWM:\t%8lu kB\n"
-		"VmRSS:\t%8lu kB\n"
-		"RssAnon:\t%8lu kB\n"
-		"RssFile:\t%8lu kB\n"
-		"RssShmem:\t%8lu kB\n"
-		"VmData:\t%8lu kB\n"
-		"VmStk:\t%8lu kB\n"
-		"VmExe:\t%8lu kB\n"
-		"VmLib:\t%8lu kB\n"
-		"VmPTE:\t%8lu kB\n"
-		"VmSwap:\t%8lu kB\n",
-		hiwater_vm << (PAGE_SHIFT-10),
-		total_vm << (PAGE_SHIFT-10),
-		mm->locked_vm << (PAGE_SHIFT-10),
-		mm->pinned_vm << (PAGE_SHIFT-10),
-		hiwater_rss << (PAGE_SHIFT-10),
-		total_rss << (PAGE_SHIFT-10),
-		anon << (PAGE_SHIFT-10),
-		file << (PAGE_SHIFT-10),
-		shmem << (PAGE_SHIFT-10),
-		mm->data_vm << (PAGE_SHIFT-10),
-		mm->stack_vm << (PAGE_SHIFT-10), text, lib,
-		mm_pgtables_bytes(mm) >> 10,
-		swap << (PAGE_SHIFT-10));
+	SEQ_PUT_DEC("VmPeak:\t", hiwater_vm);
+	SEQ_PUT_DEC(" kB\nVmSize:\t", total_vm);
+	SEQ_PUT_DEC(" kB\nVmLck:\t", mm->locked_vm);
+	SEQ_PUT_DEC(" kB\nVmPin:\t", mm->pinned_vm);
+	SEQ_PUT_DEC(" kB\nVmHWM:\t", hiwater_rss);
+	SEQ_PUT_DEC(" kB\nVmRSS:\t", total_rss);
+	SEQ_PUT_DEC(" kB\nRssAnon:\t", anon);
+	SEQ_PUT_DEC(" kB\nRssFile:\t", file);
+	SEQ_PUT_DEC(" kB\nRssShmem:\t", shmem);
+	SEQ_PUT_DEC(" kB\nVmData:\t", mm->data_vm);
+	SEQ_PUT_DEC(" kB\nVmStk:\t", mm->stack_vm);
+	seq_put_decimal_ull_width(m,
+		    " kB\nVmExe:\t", text >> 10, 8);
+	seq_put_decimal_ull_width(m,
+		    " kB\nVmLib:\t", lib >> 10, 8);
+	SEQ_PUT_DEC(" kB\nVmSwap:\t", swap);
+	seq_puts(m, " kB\n");
 	hugetlb_report_usage(m, mm);
 }
+#undef SEQ_PUT_DEC
 
 unsigned long task_vsize(struct mm_struct *mm)
 {
@@ -766,6 +757,9 @@ void __weak arch_show_smap(struct seq_file *m, struct vm_area_struct *vma)
 {
 }
 
+#define SEQ_PUT_DEC(str, val) \
+		seq_put_decimal_ull_width(m, str, (val) >> 10, 8)
+
 static void smap_gather_stats(struct vm_area_struct *vma,
 			     struct mem_size_stats *mss)
 {
@@ -862,14 +856,11 @@ static int show_smap(struct seq_file *m, void *v)
 		seq_putc(m, '\n');
 	}
 
-	seq_printf(m,
-		   "Size:           %8lu kB\n"
-		   "KernelPageSize: %8lu kB\n"
-		   "MMUPageSize:    %8lu kB\n",
-		   (vma->vm_end - vma->vm_start) >> 10,
-		   vma_kernel_pagesize(vma) >> 10,
-		   vma_mmu_pagesize(vma) >> 10);
+	SEQ_PUT_DEC("Size:           ", (vma->vm_end - vma->vm_start));
+	SEQ_PUT_DEC(" kB\nKernelPageSize: ", vma_kernel_pagesize(vma));
+	SEQ_PUT_DEC(" kB\nMMUPageSize:    ", vma_mmu_pagesize(vma));
 
+		seq_puts(m, " kB\n");
 	__show_smap(m, &mss);
 
 	arch_show_smap(m, vma);
@@ -976,6 +967,7 @@ out_put_task:
 
 	return ret;
 }
+#undef SEQ_PUT_DEC
 
 static const struct seq_operations proc_pid_smaps_op = {
 	.start	= m_start,
