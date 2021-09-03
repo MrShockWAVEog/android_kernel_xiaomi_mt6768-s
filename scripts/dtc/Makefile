@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0
 # scripts/dtc makefile
+HOST_EXTRACFLAGS += -DNO_YAML
 
 hostprogs-y	:= dtc
 always		:= $(hostprogs-y)
