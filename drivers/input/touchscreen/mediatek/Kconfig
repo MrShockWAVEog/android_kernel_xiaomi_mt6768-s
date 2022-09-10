@@ -53,7 +53,7 @@ config TOUCHSCREEN_MTK_FOCALTECH_TS
 	  To compile this dirver as a module, choose M here: the
 	  module will be called.
 
-source "drivers/input/touchscreen/mediatek/focaltech_touch/Kconfig"
+#source "drivers/input/touchscreen/mediatek/focaltech_touch/Kconfig"
 
 config TOUCHSCREEN_MTK_GT1151
 	bool "GT1151 for Mediatek package"
@@ -202,4 +202,9 @@ config TOUCHSCREEN_GOODIX_BRL
 	  If unsure, say N.
 source "drivers/input/touchscreen/mediatek/goodix_berlin_driver/Kconfig"
 
+source "drivers/input/touchscreen/mediatek/xiaomi/Kconfig"
+source "drivers/input/touchscreen/mediatek/NT36672/Kconfig"
+source "drivers/input/touchscreen/mediatek/FT8719P/Kconfig"
+source "drivers/input/touchscreen/mediatek/NT36xxx_HOSTDL_SPI/Kconfig"
+source "drivers/input/touchscreen/mediatek/focaltech_touch/Kconfig"
 endif
