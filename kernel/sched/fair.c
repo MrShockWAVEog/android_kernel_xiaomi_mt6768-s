@@ -11851,8 +11851,8 @@ static void nohz_idle_balance(struct rq *this_rq, enum cpu_idle_type idle)
 	rcu_read_unlock();
 
 	cpumask_andnot(&cpus, nohz.idle_cpus_mask, cpu_isolated_mask);
-	for_each_cpu(balance_cpu, &cpus) {
-		if (balance_cpu == this_cpu || !idle_cpu(balance_cpu))
+	for_each_cpu(balance_cpu, nohz.idle_cpus_mask) {
+		if (!idle_cpu(balance_cpu))
 			continue;
 
 		/*
