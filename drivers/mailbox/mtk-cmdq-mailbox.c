@@ -118,6 +118,7 @@ struct cmdq_task {
 	u64			exec_time;
 };
 
+#if 0
 struct cmdq_buf_dump {
 	struct cmdq		*cmdq;
 	struct work_struct	dump_work;
@@ -126,6 +127,7 @@ struct cmdq_buf_dump {
 	size_t			cmd_buf_size;
 	u32			pa_offset; /* pa_curr - pa_base */
 };
+#endif
 
 #if IS_ENABLED(CONFIG_MMPROFILE)
 #include "../misc/mediatek/mmp/mmprofile.h"
@@ -808,6 +810,7 @@ static void cmdq_task_exec_done(struct cmdq_task *task, s32 err)
 	list_del_init(&task->list_entry);
 }
 
+#if 0
 static void cmdq_buf_dump_schedule(struct cmdq_task *task, bool timeout,
 				   u32 pa_curr)
 {
@@ -829,6 +832,7 @@ static void cmdq_buf_dump_schedule(struct cmdq_task *task, bool timeout,
 		task->pkt->cmd_buf_size, pa_curr,
 		inst ? *inst : -1);
 }
+#endif
 
 static void cmdq_task_handle_error(struct cmdq_task *task)
 {
@@ -946,7 +950,7 @@ static void cmdq_thread_irq_handler(struct cmdq *cmdq,
 		} else if (err) {
 			cmdq_err("pkt:0x%p thread:%u err:%d",
 				curr_task->pkt, thread->idx, err);
-			cmdq_buf_dump_schedule(task, false, curr_pa);
+			//cmdq_buf_dump_schedule(task, false, curr_pa);
 			cmdq_task_exec_done(task, err);
 			cmdq_task_handle_error(curr_task);
 			list_add_tail(&task->list_entry, removes);
@@ -1127,7 +1131,7 @@ static void cmdq_thread_handle_timeout_work(struct work_struct *work_item)
 		bool curr_task = cmdq_task_is_current_run(pa_curr, task->pkt);
 
 		if (first_task) {
-			cmdq_buf_dump_schedule(task, true, pa_curr);
+			//cmdq_buf_dump_schedule(task, true, pa_curr);
 			first_task = false;
 		}
 
@@ -2006,9 +2010,11 @@ static int cmdq_probe(struct platform_device *pdev)
 	}
 	dev_notice(dev, "register mailbox successfully\n");
 
+#if 0
 	cmdq->buf_dump_wq = alloc_ordered_workqueue(
 			"%s", WQ_MEM_RECLAIM | WQ_HIGHPRI,
 			"cmdq_buf_dump");
+#endif
 
 	cmdq->timeout_wq = create_singlethread_workqueue(
 		"cmdq_timeout_handler");
