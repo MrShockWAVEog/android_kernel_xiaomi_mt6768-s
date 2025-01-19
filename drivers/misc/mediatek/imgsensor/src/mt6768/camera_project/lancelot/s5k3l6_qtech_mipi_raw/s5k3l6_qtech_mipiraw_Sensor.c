@@ -566,11 +566,11 @@ static void write_shutter(kal_uint64 shutter)
 {
 	kal_uint16 realtime_fps = 0;
 
-	LOG_DBG(" XL shutter = %d\n", shutter);
+	LOG_DBG(" XL shutter = %lld\n", shutter);
 	if (shutter <= 65530) {
 		if (bNeedSetNormalMode) {
 			kal_uint16 timeout = 0;
-			LOG_DBG("XL NORMAL shutter = %d\n", shutter);
+			LOG_DBG("XL NORMAL shutter = %lld\n", shutter);
 
 			write_cmos_sensor_8(0x0100, 0x00);     //stream off
 			while (1) {
@@ -648,7 +648,7 @@ static void write_shutter(kal_uint64 shutter)
 	//write_cmos_sensor_8(0x0104, 0x01);
 	write_cmos_sensor(0x0202, shutter);
 	//write_cmos_sensor_8(0x0104, 0x00);
-	LOG_DBG("shutter =%d, framelength =%d\n",
+	LOG_DBG("shutter =%lld, framelength =%d\n",
 		shutter, imgsensor.frame_length);
 
 	} else {
