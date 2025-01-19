@@ -304,10 +304,10 @@ static void write_shutter(kal_uint64 shutter)
 	kal_uint64 long_shutter0202 = 0;
 	kal_uint64 long_shutter0340 = 0;
 
-	LOG_INF(" XL shutter = %d\n", shutter);
+	LOG_INF(" XL shutter = %lld\n", shutter);
 	if (shutter < 75918) {
 		if (bNeedSetNormalMode) {
-			LOG_INF("XL NORMAL shutter = %d\n", shutter);
+			LOG_INF("XL NORMAL shutter = %lld\n", shutter);
 
 			write_cmos_sensor_8(0x0100, 0x00);     //stream off
 			write_cmos_sensor_8(0x0340, imgsensor.frame_length >> 8);
@@ -366,7 +366,7 @@ static void write_shutter(kal_uint64 shutter)
 	write_cmos_sensor_8(0x0202, shutter >> 8);
 	write_cmos_sensor_8(0x0203, shutter & 0xFF);
 
-	LOG_INF("shutter =%d, framelength =%d\n", shutter,
+	LOG_INF("shutter =%lld, framelength =%d\n", shutter,
 		imgsensor.frame_length);
 } else {
 		bNeedSetNormalMode = KAL_TRUE;
@@ -376,8 +376,8 @@ static void write_shutter(kal_uint64 shutter)
 
 		long_shutter0202 = ((shutter * 0x10B0) / 75918);
 		long_shutter0340 = (((shutter * 0x10B0) / 75918) + 5);
-		LOG_INF("XL long shutter = %ds\n", shutter / 75918);
-		LOG_INF("XL shutter = %ds\n", shutter);
+		LOG_INF("XL long shutter = %llds\n", shutter / 75918);
+		LOG_INF("XL shutter = %llds\n", shutter);
 		write_cmos_sensor_8(0x0100, 0x00);
 		write_cmos_sensor_8(0x0340, long_shutter0340 >> 8);
 		write_cmos_sensor_8(0x0341, long_shutter0340 & 0xFF);
@@ -1725,7 +1725,7 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
 		break;
 	case SENSOR_FEATURE_GET_PIXEL_CLOCK_FREQ:
 		LOG_INF
-		    ("feature_Control imgsensor.pclk = %d,imgsensor.current_fps = %d\n",
+		    ("feature_Control imgsensor.pclk = %d,imgsensor.current_fps = %lld\n",
 		     imgsensor.pclk, imgsensor.current_fps);
 		*feature_return_para_32 = imgsensor.pclk;
 		*feature_para_len = 4;
