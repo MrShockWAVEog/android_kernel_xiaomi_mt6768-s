@@ -450,7 +450,7 @@ static struct ctl_table kern_table[] = {
 		.procname	= "sched_cstate_aware",
 		.data		= &sysctl_sched_cstate_aware,
 		.maxlen		= sizeof(unsigned int),
-		.mode		= 0644,
+		.mode		= 0444,
 		.proc_handler	= proc_dointvec,
 	},
 	{

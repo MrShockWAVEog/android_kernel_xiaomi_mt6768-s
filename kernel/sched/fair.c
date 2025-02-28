@@ -7558,8 +7558,8 @@ static inline int select_idle_sibling_cstate_aware(struct task_struct *p, int pr
 
 static int select_idle_sibling(struct task_struct *p, int prev, int target)
 {
-	if (!sysctl_sched_cstate_aware)
-		return __select_idle_sibling(p, prev, target);
+	/* if (!sysctl_sched_cstate_aware)
+		return __select_idle_sibling(p, prev, target); */
 
 	return select_idle_sibling_cstate_aware(p, prev, target);
 }
@@ -7739,7 +7739,7 @@ static inline int find_best_target(struct task_struct *p, int *backup_cpu,
 						continue;
 
 					if (capacity_orig == min_target_capacity
-						&& sysctl_sched_cstate_aware &&
+						&& /* sysctl_sched_cstate_aware && */
 						best_idle_cstate <= idle_idx)
 						continue;
 
@@ -7854,7 +7854,7 @@ static inline int find_best_target(struct task_struct *p, int *backup_cpu,
 				 * shallow idle big CPU.
 				 */
 				if (capacity_orig == best_idle_min_cap_orig &&
-				    sysctl_sched_cstate_aware &&
+				    /* sysctl_sched_cstate_aware && */
 				    best_idle_cstate <= idle_idx)
 					continue;
 
