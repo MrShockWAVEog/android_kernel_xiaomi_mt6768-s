@@ -419,6 +419,7 @@ static const struct file_operations kbasep_gpu_debug_log_debugfs_fops = {
 
 static struct proc_dir_entry *mali_pentry;
 
+#ifdef CONFIG_MTK_AEE_FEATURE
 static struct workqueue_struct	   *g_aee_workqueue;
 static struct work_struct		   g_aee_work;
 static int g_aee_called;
@@ -447,6 +448,7 @@ void mtk_trigger_emi_report(u64 pa)
 	pr_err("emi mpu violation: pa: 0x%llx, dump registers and trigger check_pa", pa);
 	queue_work(g_aee_workqueue, &g_pa_work);
 }
+#endif
 
 void proc_mali_register(void)
 {
@@ -455,9 +457,11 @@ void proc_mali_register(void)
 	if (!mali_pentry)
 		return;
 
+#ifdef CONFIG_MTK_AEE_FEATURE
 	g_aee_workqueue = alloc_ordered_workqueue("mali_aeewp", WQ_FREEZABLE | WQ_MEM_RECLAIM);
 	INIT_WORK(&g_aee_work, aee_Handle);
 	INIT_WORK(&g_pa_work, pa_Handle);
+#endif
 
 	proc_create("help", 0, mali_pentry, &kbasep_gpu_help_debugfs_fops);
 	proc_create("memory_usage", 0, mali_pentry, &kbasep_gpu_memory_usage_debugfs_open);
