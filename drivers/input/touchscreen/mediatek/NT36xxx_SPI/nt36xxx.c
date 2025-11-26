@@ -657,6 +657,8 @@ int32_t nvt_check_fw_status(void)
 	int32_t i = 0;
 	const int32_t retry = 50;
 
+	usleep_range(20000, 20000);
+
 	for (i = 0; i < retry; i++) {
 		//---set xdata index to EVENT BUF ADDR---
 		nvt_set_page(ts->mmap->EVENT_BUF_ADDR | EVENT_MAP_HANDSHAKING_or_SUB_CMD_BYTE);
@@ -733,7 +735,6 @@ return:
 int32_t nvt_read_pid(void)
 {
 	uint8_t buf[4] = {0};
-	int32_t ret = 0;
 
 	//---set xdata index to EVENT BUF ADDR---
 	nvt_set_page(ts->mmap->EVENT_BUF_ADDR | EVENT_MAP_PROJECTID);
@@ -751,7 +752,7 @@ int32_t nvt_read_pid(void)
 
 	NVT_LOG("PID=%04X\n", ts->nvt_pid);
 
-	return ret;
+	return 0;
 }
 
 /*******************************************************
@@ -809,7 +810,6 @@ info_retry:
 
 	NVT_LOG("fw_ver = 0x%02X, fw_type = 0x%02X\n", ts->fw_ver, buf[14]);
 	/*BSP.Touch - 2020.11.13 - add for hw_info start*/
-	printk("[%s]: fw_ver = 0x%02x \n", ts->fw_ver);
 	tp_fw_version = ts->fw_ver;
 	/*BSP.Touch - 2020.11.13 - add for hw_info end*/
 	//---Get Novatek PID---
@@ -823,19 +823,25 @@ void get_tp_info(void)
 {
 	nvt_get_fw_info();
 
+#ifdef CONFIG_TARGET_PRODUCT_MERLINCOMMON
+	sprintf(tp_version_info, "[Vendor]Tianma,[TP-IC]:NT36672A,[FW]0x%x,PID=%04X\n", tp_fw_version, ts->nvt_pid);
+#else
 	if (is_ft_lcm == 0) {
 		sprintf(tp_version_info, "[Vendor]Tianma,[TP-IC]:NT36672,[FW]0x%x,PID=%04X\n", tp_fw_version, ts->nvt_pid);
 	} else if (is_ft_lcm == 1) {
 		sprintf(tp_version_info, "[Vendor]Dijing,[TP-IC]:NT36672,[FW]0x%x,PID=%04X\n", tp_fw_version, ts->nvt_pid);
 	} else if (is_ft_lcm == 3) {
 		sprintf(tp_version_info, "[Vendor]Dijing,[TP-IC]:NT36672D,[FW]0x%x,PID=%04X\n", tp_fw_version, ts->nvt_pid);
+#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
 	} else if (is_ft_lcm == 4) {
 		sprintf(tp_version_info, "[Vendor]Tianma,[TP-IC]:NT36672C,[FW]0x%x,PID=%04X\n", tp_fw_version, ts->nvt_pid);
 	} else if (is_ft_lcm == 5) {
 		sprintf(tp_version_info, "[Vendor]Truly,[TP-IC]:NT36672C,[FW]0x%x,PID=%04X\n", tp_fw_version, ts->nvt_pid);
+#endif
 	}
+#endif
 
-	printk("[%s]: tp_version %s\n", __func__, tp_version_info);
+	NVT_LOG("[%s]: tp_version %s\n", __func__, tp_version_info);
 
 	hq_regiser_hw_info(HWID_CTP, tp_version_info);
 
@@ -1447,14 +1453,6 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
 		NVT_ERR("CTP_SPI_READ failed.(%d)\n", ret);
 		goto XFER_ERROR;
 	}
-/*
-	//--- dump SPI buf ---
-	for (i = 0; i < 10; i++) {
-		printk("%02X %02X %02X %02X %02X %02X  ",
-			point_data[1+i*6], point_data[2+i*6], point_data[3+i*6], point_data[4+i*6], point_data[5+i*6], point_data[6+i*6]);
-	}
-	printk("\n");
-*/
 
 #if NVT_TOUCH_WDT_RECOVERY
    /* ESD protect by WDT */
@@ -1545,8 +1543,7 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
 			input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, input_w);
 			input_report_abs(ts->input_dev, ABS_MT_PRESSURE, input_p);
 
-#if MT_PROTOCOL_B
-#else /* MT_PROTOCOL_B */
+#if !(MT_PROTOCOL_B) /* MT_PROTOCOL_B */
 			input_mt_sync(ts->input_dev);
 #endif /* MT_PROTOCOL_B */
 
@@ -1711,7 +1708,6 @@ static struct tp_common_ops double_tap_ops = {
 #endif
 #endif
 
-
 /*BSP.TP add nvt_irq - 2020.11.11 - Start*/
 static ssize_t nvt_irq_show(
 	struct device *dev, struct device_attribute *attr, char *buf)
@@ -1719,7 +1715,7 @@ static ssize_t nvt_irq_show(
 	ssize_t count = 0;
 	struct irq_desc *desc = irq_to_desc(ts->client->irq);
 
-	count = snprintf(buf, PAGE_SIZE, "irq_depth:%d\n", desc->depth);
+	count = snprintf(buf, sizeof(buf), "irq_depth:%d\n", desc->depth);
 
 	return count;
 }
@@ -1795,20 +1791,39 @@ int tp_compare_ic(void)
 {
 	NVT_LOG("tp_compare_ic in!!");
 	if (is_ft_lcm == 0) {
+#ifndef CONFIG_TARGET_PRODUCT_MERLINCOMMON
 		BOOT_UPDATE_FIRMWARE_NAME = "nvt_tm_fw.bin";
 		MP_UPDATE_FIRMWARE_NAME = "nvt_tm_mp.bin";
 		NVT_LOG("match nt36672A_fhdp_dsi_vdo_tianma_j19_lcm_drv");
+#else
+		BOOT_UPDATE_FIRMWARE_NAME = "novatek_ts_fw.bin";
+		MP_UPDATE_FIRMWARE_NAME = "novatek_ts_mp.bin";
+		NVT_LOG("match nt36672A_fhdp_dsi_vdo_tianma_lcm_drv");
+#endif
 		return 0;
 	} else if (is_ft_lcm == 1) {
+#ifndef CONFIG_TARGET_PRODUCT_MERLINCOMMON
 		BOOT_UPDATE_FIRMWARE_NAME = "nvt_dj_fw.bin";
 		MP_UPDATE_FIRMWARE_NAME = "nvt_dj_mp.bin";
 		NVT_LOG("match nt36672A_fhdp_dsi_vdo_dijing_j19_lcm_drv");
+#else
+		BOOT_UPDATE_FIRMWARE_NAME = "novatek_ts_g6_fw.bin";
+		MP_UPDATE_FIRMWARE_NAME = "novatek_ts_g6_mp.bin";
+		NVT_LOG("match nt36672A_fhdp_dsi_vdo_tianma_lcm_drv_G6");
+#endif
 		return 0;
 	} else if (is_ft_lcm == 3) {
+#ifndef CONFIG_TARGET_PRODUCT_MERLINCOMMON
 		BOOT_UPDATE_FIRMWARE_NAME = "nvt_dj_72d_fw.bin";
 		MP_UPDATE_FIRMWARE_NAME = "nvt_dj_72d_mp.bin";
 		NVT_LOG("match nt36672D_fhdp_dsi_vdo_dijing_j19_lcm_drv");
+#else
+		BOOT_UPDATE_FIRMWARE_NAME = "novatek_ts_72d_fw.bin";
+		MP_UPDATE_FIRMWARE_NAME = "novatek_ts_72d_mp.bin";
+		NVT_LOG("match nt36672D_fhdp_dsi_vdo_tianma_lcm_drv");
+#endif
 		return 0;
+#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
 	} else if (is_ft_lcm == 4) {
 		BOOT_UPDATE_FIRMWARE_NAME = "nt36672c_tm_01_ts_fw.bin";
 		MP_UPDATE_FIRMWARE_NAME = "nt36672c_tm_01_ts_mp.bin";
@@ -1819,6 +1834,7 @@ int tp_compare_ic(void)
 		MP_UPDATE_FIRMWARE_NAME = "nt36672c_tr_02_ts_mp.bin";
 		NVT_LOG("match dsi_panel_k19a_43_02_0b_dsc_vdo_lcm_drv");
 		return 0;
+#endif
 	} else {
 		NVT_ERR("failed to compare firmware\n");
 		return -1;
@@ -1874,6 +1890,8 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 		return -EXDEV;
 	}
 #endif
+/* Huaqin add for HQ-131657 by liunianliang at 2021/06/03 end */
+
 	ts->client = client;
 	spi_set_drvdata(client, ts);
 	/*BSP.TP add nvt_irq - 2020.11.11 - Start*/
@@ -1997,7 +2015,7 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 #endif
 
 #if WAKEUP_GESTURE
-	for (retry = 0; retry < (sizeof(gesture_key_array) / sizeof(gesture_key_array[0])); retry++) {
+	for (retry = 0; retry < ARRAY_SIZE(gesture_key_array); retry++) {
 		input_set_capability(ts->input_dev, EV_KEY, gesture_key_array[retry]);
 	}
 	ts->input_dev->event = nvt_gesture_switch;
@@ -2650,10 +2668,10 @@ static int32_t nvt_ts_resume(struct device *dev)
 	/* Huaqin modify for HQ-131628 by shujiawang at 2021/05/10 start */
 	if (tp_charger_status == true) {
 		nvt_set_charger_switch(1);
-		NVT_ERR("charger_switch = 1\n");
+		NVT_LOG("charger_switch = 1\n");
 	} else {
 		nvt_set_charger_switch(0);
-		NVT_ERR("charger_switch = 0\n");
+		NVT_LOG("charger_switch = 0\n");
 	}
 	/* Huaqin modify for HQ-131628 by shujiawang at 2021/05/10 end */
 
@@ -2708,10 +2726,10 @@ int32_t nvt_ts_tp_resume(void)
 	/* Huaqin modify for HQ-131628 by shujiawang at 2021/05/10 start */
 	if (tp_charger_status == true) {
 		nvt_set_charger_switch(1);
-		NVT_ERR("charger_switch = 1\n");
+		NVT_LOG("charger_switch = 1\n");
 	} else {
 		nvt_set_charger_switch(0);
-		NVT_ERR("charger_switch = 0\n");
+		NVT_LOG("charger_switch = 0\n");
 	}
 	/* Huaqin modify for HQ-131628 by shujiawang at 2021/05/10 end */
 
@@ -2756,6 +2774,8 @@ static int nvt_fb_notifier_callback(struct notifier_block *self, unsigned long e
 {
 	struct fb_event *evdata = data;
 	int *blank;
+	struct nvt_ts_data *ts =
+		container_of(self, struct nvt_ts_data, fb_notif);
 
 	if (evdata && evdata->data && event == FB_EARLY_EVENT_BLANK) {
 		blank = evdata->data;
@@ -2784,7 +2804,7 @@ static int nvt_fb_notifier_callback(struct notifier_block *self, unsigned long e
 #endif
 /* Huaqin modify for HQ-131657 by liunianliang at 2021/06/16 end */
 /* Huaqin modify for HQ-131657 by feiwen at 2021/06/03 start */
-#ifdef TP_RESUME_EN
+#if TP_RESUME_EN
 			nvt_resume_queue_work();
 #else
 			nvt_ts_resume(&ts->client->dev);
@@ -2829,7 +2849,11 @@ static const struct spi_device_id nvt_ts_id[] = {
 
 #ifdef CONFIG_OF
 static struct of_device_id nvt_match_table[] = {
+#if defined(CONFIG_TARGET_PRODUCT_LANCELOTCOMMON) || defined(CONFIG_TARGET_PRODUCT_SHIVACOMMON)
+	{ .compatible = "novatek36672,NVT-ts-spi",},
+#else
 	{ .compatible = "novatek,NVT-ts-spi",},
+#endif
 	{ },
 };
 #endif
@@ -2841,7 +2865,6 @@ static struct spi_driver nvt_spi_driver = {
 	.id_table	= nvt_ts_id,
 	.driver = {
 		.name	= NVT_SPI_NAME,
-		.owner	= THIS_MODULE,
 #ifdef CONFIG_OF
 		.of_match_table = nvt_match_table,
 #endif
@@ -2851,18 +2874,35 @@ static struct spi_driver nvt_spi_driver = {
 /* Huaqin modify for HQ-123470 by shujiawang at 2021/03/29 start */
 int __init is_lcm_detect(char *str)
 {
+#ifndef CONFIG_TARGET_PRODUCT_MERLINCOMMON
 	if (!(strcmp(str, "nt36672A_fhdp_dsi_vdo_tianma_j19_lcm_drv"))) {
+#else
+	if (!(strcmp(str, "nt36672A_fhdp_dsi_vdo_tianma_lcm_drv"))) {
+#endif
 		is_ft_lcm = 0;
 		NVT_LOG("Func:%s is_ft 0:%d", __func__, is_ft_lcm);
+#ifndef CONFIG_TARGET_PRODUCT_MERLINCOMMON
 	}else if (!(strcmp(str, "nt36672A_fhdp_dsi_vdo_dijing_j19_lcm_drv"))) {
+#else
+	}else if (!(strcmp(str, "nt36672A_fhdp_dsi_vdo_tianma_lcm_drv_G6"))) {
+#endif
 		is_ft_lcm = 1;
 		NVT_LOG("Func:%s is_ft 1:%d", __func__, is_ft_lcm);
+#ifndef CONFIG_TARGET_PRODUCT_MERLINCOMMON
 	}else if (!(strcmp(str, "ft8719_fhdp_dsi_vdo_huaxing_j19_lcm_drv"))) {
+#else
+	}else if (!(strcmp(str, "ft8719_fhdp_dsi_vdo_xinli_lcm_drv"))) {
+#endif
 		is_ft_lcm = 2;
 		NVT_LOG("Func:%s is_ft 2:%d", __func__, is_ft_lcm);
+#ifndef CONFIG_TARGET_PRODUCT_MERLINCOMMON
 	}else if (!(strcmp(str, "nt36672D_fhdp_dsi_vdo_dijing_j19_lcm_drv"))) {
+#else
+	}else if (!(strcmp(str, "nt36672D_fhdp_dsi_vdo_tianma_lcm_drv"))) {
+#endif
 		is_ft_lcm = 3;
 		NVT_LOG("Func:%s is_ft 3:%d", __func__, is_ft_lcm);
+#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
 	}else if (!(strcmp(str, "dsi_panel_k19a_36_02_0a_dsc_vdo_lcm_drv"))) {
 		is_ft_lcm = 4;
 		NVT_LOG("Func:%s is_ft 4:%d", __func__, is_ft_lcm);
@@ -2874,8 +2914,9 @@ int __init is_lcm_detect(char *str)
 		is_ft_lcm = 6;
 		NVT_LOG("Func:%s is_ft 6:%d", __func__, is_ft_lcm);
 /* Huaqin add for HQ-148560 by caogaojie at 2021/9/30 end */
+#endif
 	}
-	printk("Func:%s is_lcm_detect:%s", __func__, str);
+	NVT_LOG("Func:%s is_lcm_detect:%s", __func__, str);
 	return 0;
 }
  __setup("LCM_name=", is_lcm_detect);
@@ -2902,10 +2943,14 @@ static int32_t __init nvt_driver_init(void)
 	int32_t ret = 0;
 
 	NVT_LOG("start\n");
+#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
 /*K19A coad for HQ-147450 by feiwen at 2021/7/23 start*/
 	if ((4 != is_ft_lcm) && (5 != is_ft_lcm)){
 /*K19A coad for HQ-147450 by feiwen at 2021/7/23 end*/
-		printk("%s result  is_ft:%d", __func__, is_ft_lcm);
+#else
+	if (2 == is_ft_lcm){
+#endif
+		NVT_LOG("%s result  is_ft:%d", __func__, is_ft_lcm);
 		return -1;
 	}
 
