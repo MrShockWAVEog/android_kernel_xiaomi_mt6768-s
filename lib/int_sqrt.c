@@ -2,13 +2,15 @@
 /*
  * Copyright (C) 2013 Davidlohr Bueso <davidlohr.bueso@hp.com>
  *
- *  Based on the shift-and-subtract algorithm for computing integer
- *  square root from Guy L. Steele.
+ * Fast exact integer square root based on firelzrd's isqrt (CLZ + LUT +
+ * Newton-Raphson), replacing the Guy L. Steele shift-and-subtract
+ * implementation.
  */
 
 #include <linux/kernel.h>
 #include <linux/export.h>
 #include <linux/bitops.h>
+#include <linux/isqrt.h>
 
 /**
  * int_sqrt - rough approximation to sqrt
@@ -18,23 +20,13 @@
  */
 unsigned long int_sqrt(unsigned long x)
 {
-	unsigned long b, m, y = 0;
-
 	if (x <= 1)
 		return x;
 
-	m = 1UL << (__fls(x) & ~1UL);
-	while (m != 0) {
-		b = y + m;
-		y >>= 1;
-
-		if (x >= b) {
-			x -= b;
-			y += m;
-		}
-		m >>= 2;
-	}
-
-	return y;
+#if BITS_PER_LONG == 64
+	return (unsigned long)isqrt64(x);
+#else
+	return (unsigned long)isqrt32(x);
+#endif
 }
 EXPORT_SYMBOL(int_sqrt);
