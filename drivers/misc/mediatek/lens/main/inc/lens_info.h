@@ -19,7 +19,11 @@
 #include "lens_list.h"
 #include <linux/ioctl.h>
 
-#define MAX_NUM_OF_LENS 32
+#ifndef CONFIG_TARGET_PRODUCT_SELENECOMMON
+#define MAX_NUM_OF_LENS 2
+#else
+#define MAX_NUM_OF_LENS 4
+#endif
 
 #define AF_MAGIC 'A'
 

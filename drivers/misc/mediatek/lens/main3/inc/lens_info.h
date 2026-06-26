@@ -19,7 +19,11 @@
 #include "lens_list.h"
 #include <linux/ioctl.h>
 
-#define MAX_NUM_OF_LENS 32
+#ifndef CONFIG_TARGET_PRODUCT_MERLINCOMMON
+#define MAX_NUM_OF_LENS 0
+#else
+#define MAX_NUM_OF_LENS 3
+#endif
 
 #define AF_MAGIC 'A'
 

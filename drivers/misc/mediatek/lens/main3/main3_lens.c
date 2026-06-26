@@ -89,10 +89,6 @@ static struct stAF_OisPosInfo OisPosInfo;
 /* ------------------------- */
 
 static struct stAF_DrvList g_stAF_DrvList[MAX_NUM_OF_LENS] = {
-#if 0
-	{0, AFDRV_AK7371AF, AK7371AF_SetI2Cclient, AK7371AF_Ioctl,
-	 AK7371AF_Release, AK7371AF_GetFileName, NULL},
-#endif
 #ifdef CONFIG_MTK_LENS_CN3927AF_SUPPORT
 	{1, AFDRV_CN3927AF, CN3927AF_SetI2Cclient_Main3, CN3927AF_Ioctl_Main3,
 	 CN3927AF_Release_Main3, CN3927AF_GetFileName_Main3, NULL},
