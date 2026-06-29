@@ -22,12 +22,14 @@ struct board_id_information {
 	int voltage;
 };
 
+#ifndef CONFIG_TARGET_PRODUCT_SELENECOMMON
 static struct board_id_information board_id;
+#endif
+
 PCBA_CONFIG huaqin_pcba_config = PCBA_UNKNOW;
 
 //extern char *saved_command_line;
 extern int IMM_GetOneChannelValue(int dwChannel, int data[4], int *rawdata);
-static bool read_pcba_config(void);
 int hq_selene_pcba_config;
 
 typedef struct {
