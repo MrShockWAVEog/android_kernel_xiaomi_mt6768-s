@@ -9972,7 +9972,7 @@ unsigned int primary_display_get_idle_interval(unsigned int fps)
 	/*calculate the timeout to enter idle in ms*/
 
 	if (fps > 0)
-		idle_interval = (90 * 1000) / fps + 1;
+		idle_interval = (3 * 1000) / fps + 1;
 
 	DISPMSG("[fps]:%s,[fps->idle interval][%d fps->%d ms]\n",
 		__func__, fps, idle_interval);
