@@ -128,6 +128,7 @@ static char *sensor_attr_devnode(struct device *dev, umode_t *mode)
 }
 #endif
 
+#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
 static ssize_t architecture_show(struct class *class,
                     struct class_attribute *attr,
                                 char *buf)
@@ -135,6 +136,7 @@ static ssize_t architecture_show(struct class *class,
     return scnprintf(buf, PAGE_SIZE, "MTK:1.0\n");
 }
 static CLASS_ATTR_RO(architecture);
+#endif
 
 static int __init sensor_attr_init(void)
 {
