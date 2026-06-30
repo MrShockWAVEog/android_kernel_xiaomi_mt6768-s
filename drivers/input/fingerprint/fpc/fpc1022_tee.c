@@ -302,12 +302,12 @@ static ssize_t clk_enable_set(struct device *dev,
 
 	if (fpc1022->spi) {
 		//update spi clk
-		if (*buf == 49)
+		if (*buf == 49) {
 			mt_spi_enable_master_clk(fpc1022->spi);
-
-		if (*buf == 48)
+		} else if (*buf == 48) {
 			mt_spi_disable_master_clk(fpc1022->spi);
-			return 1;
+		}
+		return 1;
 	} else
 		return 0;
 }
