@@ -246,17 +246,7 @@ static struct LCM_setting_table lcm_suspend_setting[] = {
 	{REGFLAG_DELAY, 120, {} }
 };
 /* Huaqin modify for HQ-124216 by caogaojie at 2021/05/8 end */
-/* Huaqin modify for HQ-144782 by caogaojie at 2021/07/05 start */
-static struct LCM_setting_table tp_reset_cmd1[] = {
-	{0xFF, 1, {0xC0} },
-	{0x4B, 1, {0x00} },
-};
 
-static struct LCM_setting_table tp_reset_cmd2[] = {
-	{0xFF, 1, {0xC0} },
-	{0x4B, 1, {0x0E} },
-};
-/* Huaqin modify for HQ-144782 by caogaojie at 2021/07/05 end */
 static struct LCM_setting_table init_setting_vdo[] = {
 	{0xFF, 1, {0x10} },
         {0xFB, 1, {0x01} },
