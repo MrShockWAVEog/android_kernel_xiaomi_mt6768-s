@@ -63,6 +63,10 @@ typedef __u16               FSC_U16;                                           /
 typedef __u32               FSC_U32;                                           // 32-bit unsigned
 #endif // FSC_U32
 
+#ifndef FSC_U64
+typedef __u64               FSC_U64;                                           // 64-bit unsigned
+#endif // FSC_U64
+
 #undef __EXTENSION
 
 #endif // FSC_PLATFORM_LINUX
