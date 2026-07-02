@@ -243,13 +243,12 @@ int mdss_prim_panel_fb_unblank(int timeout)
 	printk("SXF Enter %s\n", __func__);
 	if (prim_fbi) {
 		mfd = (struct mtkfb_device *)prim_fbi->par;
-		ret = wait_event_timeout(mfd->resume_wait_q,
-				!atomic_read(&mfd->resume_pending),
-				msecs_to_jiffies(WAIT_RESUME_TIMEOUT));
-		if (!ret) {
-			printk("Primary fb resume timeout\n");
-			return -ETIMEDOUT;
-		}
+		/*
+		* HWC3 Fix: Removed PM resume wait.
+		* This caused 2-3s wake delay as system resume
+		* takes 2-3s to complete. Panel can light up
+		* before PM core finishes resuming.
+		*/
 #ifdef CONFIG_FRAMEBUFFER_CONSOLE
 		console_lock();
 #endif
