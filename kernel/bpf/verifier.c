@@ -217,6 +217,8 @@ static DEFINE_MUTEX(bpf_verifier_lock);
 void bpf_verifier_vlog(struct bpf_verifier_log *log, const char *fmt,
 		       va_list args)
 {
+	return; //FIXME
+
 	unsigned int n;
 
 	n = vscnprintf(log->kbuf, BPF_VERIFIER_TMP_LOG_SIZE, fmt, args);
