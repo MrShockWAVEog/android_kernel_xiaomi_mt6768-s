@@ -268,14 +268,12 @@ static unsigned int gx_frc_mode; /* variable to fix FRC mode*/
 #ifdef GED_KPI_CPU_BOOST
 static unsigned int enable_cpu_boost = 1;
 #endif /* GED_KPI_CPU_BOOST */
-static unsigned int enable_gpu_boost = 1;
 #if !defined(CONFIG_MTK_GPU_COMMON_DVFS_SUPPORT)
 /* Disable for bring-up stage unexpected exception */
 static unsigned int is_GED_KPI_enabled;
 #else
 static unsigned int is_GED_KPI_enabled = 1;
 #endif
-static unsigned int ap_self_frc_detection_rate = 20;
 #ifdef GED_ENABLE_FB_DVFS
 static unsigned int g_force_gpu_dvfs_fallback;
 static int g_fb_dvfs_threshold = 80;
@@ -286,9 +284,7 @@ module_param(gx_frc_mode, uint, 0644);
 #ifdef GED_KPI_CPU_BOOST
 module_param(enable_cpu_boost, uint, 0644);
 #endif /* GED_KPI_CPU_BOOST */
-module_param(enable_gpu_boost, uint, 0644);
 module_param(is_GED_KPI_enabled, uint, 0644);
-module_param(ap_self_frc_detection_rate, uint, 0644);
 /* for calculating remained time budgets of CPU and GPU:
  *		time budget: the buffering time that prevents fram drop
  */
@@ -309,8 +305,8 @@ static unsigned long long g_CRemTimeAccu; /*g_cpu_remained_time_accum*/
 static unsigned long long g_gpu_freq_accum;
 static unsigned int g_frame_count;
 
-static int gx_game_mode;
-static int gx_boost_on;
+static int gx_game_mode = 0;
+static int gx_boost_on = 0;
 #ifdef GED_KPI_CPU_BOOST
 static int gx_force_cpu_boost;
 static int gx_top_app_pid;
@@ -330,6 +326,8 @@ static int boost_accum_cpu;
 static long target_t_cpu_remained = 16000000;
 /* static long target_t_cpu_remained_min = 8300000; */
 /* default 0.5 vsync period */
+static int enable_gpu_boost = 1;
+static int ap_self_frc_detection_rate = 20;
 static int cpu_boost_policy;
 static int boost_extra;
 static int boost_amp;
@@ -346,6 +344,8 @@ module_param(boost_amp, int, 0644);
 module_param(deboost_reduce, int, 0644);
 module_param(boost_upper_bound, int, 0644);
 module_param(enable_game_self_frc_detect, int, 0644);
+module_param(ap_self_frc_detection_rate, uint, 0644);
+module_param(enable_gpu_boost, uint, 0644);
 #endif /* GED_KPI_CPU_BOOST */
 module_param(gx_game_mode, int, 0644);
 module_param(gx_boost_on, int, 0644);
