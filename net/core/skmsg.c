@@ -482,6 +482,7 @@ end:
 
 struct sk_psock *sk_psock_init(struct sock *sk, int node)
 {
+	struct proto *prot = READ_ONCE(sk->sk_prot);
 	struct sk_psock *psock = kzalloc_node(sizeof(*psock),
 					      GFP_ATOMIC | __GFP_NOWARN,
 					      node);
@@ -749,7 +750,6 @@ static void sk_psock_verdict_apply(struct sk_psock *psock,
 	case __SK_DROP:
 		/* fall-through */
 	default:
-out_free:
 		kfree_skb(skb);
 	}
 }
