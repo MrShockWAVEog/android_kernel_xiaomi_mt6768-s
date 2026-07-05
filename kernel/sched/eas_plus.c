@@ -158,6 +158,7 @@ int select_max_spare_capacity(struct task_struct *p, int target)
 	int cid = arch_get_cluster_id(target); /* cid of target CPU */
 	int cpu = task_cpu(p);
 	struct cpumask *tsk_cpus_allow = &p->cpus_allowed;
+	unsigned long task_util_val = task_util(p);
 
 	/* If the prevous cpu is cache affine and idle, choose it first. */
 	if (cpu != l_plus_cpu && cpu != target &&
@@ -171,6 +172,7 @@ int select_max_spare_capacity(struct task_struct *p, int target)
 	for_each_cpu_and(cpu, tsk_cpus_allow, &cls_cpus) {
 		unsigned long int new_usage;
 		unsigned long int spare_cap;
+		unsigned long cpu_cap;
 
 		if (!cpu_online(cpu))
 			continue;
@@ -192,12 +194,13 @@ int select_max_spare_capacity(struct task_struct *p, int target)
 		if (idle_cpu(cpu))
 			return cpu;
 
-		new_usage = cpu_util(cpu) + task_util(p);
+		new_usage = cpu_util(cpu) + task_util_val;
 
-		if (new_usage >= capacity_of(cpu))
+		cpu_cap = capacity_of(cpu);
+		if (new_usage >= cpu_cap)
 			spare_cap = 0;
 		else    /* consider RT/IRQ capacity reduction */
-			spare_cap = (capacity_of(cpu) - new_usage);
+			spare_cap = (cpu_cap - new_usage);
 
 		/* update CPU with max spare capacity */
 		if ((long int)spare_cap > (long int)max_spare_capacity) {
@@ -912,6 +915,7 @@ update_sg_util(struct task_struct *p, int dst_cpu,
 	int cpu = cpumask_first(sg_mask);
 	const struct sched_group_energy *sge;
 	unsigned long new_util;
+	unsigned long task_util_val = task_util_est(p);
 	int idx, max_idx;
 
 	sg_env->sum_util = 0;
@@ -935,7 +939,7 @@ update_sg_util(struct task_struct *p, int dst_cpu,
 		cpu_boosted_util = uclamp_rq_util_with(cpu_rq(cpu), cpu_util, p);
 
 		if (tsk)
-			cpu_util += task_util_est(p);
+			cpu_util += task_util_val;
 
 		sg_env->sum_util += cpu_util;
 		sg_env->max_util = max(sg_env->max_util, cpu_boosted_util);
@@ -1124,6 +1128,7 @@ static int find_energy_efficient_cpu_enhanced(struct task_struct *p,
 	int max_spare_cap_cpu_ls = prev_cpu;
 	long max_spare_cap_ls = LONG_MIN;
 	unsigned long target_cap, cpu_cap, util, wake_util;
+	unsigned long task_util_val = task_util_est(p);
 	bool boosted, prefer_idle = false;
 	unsigned int min_exit_lat = UINT_MAX;
 	long sys_max_spare_cap = LONG_MIN;
@@ -1140,11 +1145,11 @@ static int find_energy_efficient_cpu_enhanced(struct task_struct *p,
 		}
 	}
 
-	sd = rcu_dereference(per_cpu(sd_ea, this_cpu));
-	if (!sd)
+	if (!boosted_task_util(p))
 		return -1;
 
-	if (!boosted_task_util(p))
+	sd = rcu_dereference(per_cpu(sd_ea, this_cpu));
+	if (!sd)
 		return -1;
 
 	prefer_idle = schedtune_prefer_idle(p);
@@ -1173,7 +1178,7 @@ static int find_energy_efficient_cpu_enhanced(struct task_struct *p,
 
 			/* Skip CPUs that will be overutilized. */
 			wake_util = (prefer_idle && idle_cpu(cpu)) ? 0 : cpu_util_without(cpu, p);
-			util = wake_util + task_util_est(p);
+			util = wake_util + task_util_val;
 			cpu_cap = capacity_of(cpu);
 			spare_cap = cpu_cap - util;
 			if (spare_cap > sys_max_spare_cap) {
