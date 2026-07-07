@@ -474,7 +474,7 @@ static inline int ccci_dpmaif_hif_set_wakeup_src(unsigned char hif_id,
 
     if (hif_ctrl) {
         atomic_set(&hif_ctrl->wakeup_src, value);
-        return 0;
+        return value;
     } else {
         return -1;
     }
