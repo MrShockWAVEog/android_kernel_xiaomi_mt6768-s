@@ -18,9 +18,6 @@
 /* C3T code for HQ-223663 by liunianliang at 2022/07/19 end */
 #define SWTP_COMPATIBLE_DEVICE_ID "mediatek, swtp-eint"
 #define SWTP1_COMPATIBLE_DEVICE_ID "mediatek, swtp1-eint"
-#define SWTP2_COMPATIBLE_DEVICE_ID "mediatek, swtp2-eint"
-#define SWTP3_COMPATIBLE_DEVICE_ID "mediatek, swtp3-eint"
-#define SWTP4_COMPATIBLE_DEVICE_ID "mediatek, swtp4-eint"
 
 #define SWTP_EINT_PIN_PLUG_IN        (1)
 #define SWTP_EINT_PIN_PLUG_OUT       (0)
