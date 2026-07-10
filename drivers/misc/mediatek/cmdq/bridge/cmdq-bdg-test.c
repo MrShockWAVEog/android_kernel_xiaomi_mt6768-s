@@ -363,6 +363,10 @@ static int cmdq_bdg_test_probe(struct platform_device *pdev)
 	struct dentry *dir, *fs;
 	s32 ret;
 
+	if (!of_property_read_bool(pdev->dev.of_node,
+		"mediatek,enable-cmdq-bdg-test"))
+		return -ENODEV;
+
 	test = devm_kzalloc(&pdev->dev, sizeof(*test), GFP_KERNEL);
 	if (!test)
 		return -ENOMEM;
