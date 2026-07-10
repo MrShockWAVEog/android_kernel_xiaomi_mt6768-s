@@ -43,6 +43,9 @@
 #include "ccci_port.h"
 #include "port_proxy.h"
 #include "port_udc.h"
+extern struct port_ops ctl_port_ops;
+extern struct port_ops sys_port_ops;
+extern struct port_ops poller_port_ops;
 #define TAG PORT
 #define CCCI_DEV_NAME "ccci"
 
@@ -989,7 +992,11 @@ int port_recv_skb(struct port_t *port, struct sk_buff *skb)
 
 		port->rx_pkg_cnt++;
 		spin_unlock_irqrestore(&port->rx_skb_list.lock, flags);
-		__pm_wakeup_event(&port->rx_wakelock, jiffies_to_msecs(HZ/2));
+		if (port->ops != &ctl_port_ops &&
+		    port->ops != &sys_port_ops &&
+		    port->ops != &poller_port_ops)
+			__pm_wakeup_event(&port->rx_wakelock,
+					  jiffies_to_msecs(HZ));
 		spin_lock_irqsave(&port->rx_wq.lock, flags);
 		wake_up_all_locked(&port->rx_wq);
 		spin_unlock_irqrestore(&port->rx_wq.lock, flags);

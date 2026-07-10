@@ -1470,9 +1470,6 @@ static int ccci_modem_probe(struct platform_device *plat_dev)
 	/* init modem private data */
 	md_info = (struct md_sys1_info *)md->private_data;
 
-	snprintf(md->trm_wakelock_name, sizeof(md->trm_wakelock_name),
-		"md%d_cldma_trm", md_id + 1);
-	wakeup_source_init(&md->trm_wake_lock, md->trm_wakelock_name);
 	snprintf(md_info->peer_wakelock_name,
 		sizeof(md_info->peer_wakelock_name),
 		"md%d_cldma_peer", md_id + 1);

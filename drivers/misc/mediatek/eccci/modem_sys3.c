@@ -539,10 +539,6 @@ static int md_ccif_probe(struct platform_device *dev)
 	md->hw_info = md_hw;
 
 	CCCI_INIT_LOG(md_id, TAG, "modem ccif module probe...\n");
-	snprintf(md->trm_wakelock_name, sizeof(md->trm_wakelock_name),
-		"md%d_ccif_trm", md->index + 1);
-	wakeup_source_init(&md->trm_wake_lock, md->trm_wakelock_name);
-
 
 	/*init modem structure */
 	md->ops = &md_ccif_ops;

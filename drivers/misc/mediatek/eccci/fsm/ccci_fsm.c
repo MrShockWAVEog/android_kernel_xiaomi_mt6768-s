@@ -309,6 +309,7 @@ static void fsm_routine_exception(struct ccci_fsm_ctl *ctl,
 	/* 3. always end in exception state */
 	if (cmd)
 		fsm_finish_command(ctl, cmd, 1);
+	__pm_relax(&ctl->wakelock);
 }
 
 #if (MD_GENERATION >= 6297)
@@ -336,8 +337,10 @@ static void fsm_routine_start(struct ccci_fsm_ctl *ctl,
 	unsigned long flags;
 
 	/* 1. state sanity check */
-	if (ctl->curr_state == CCCI_FSM_READY)
-		goto success;
+	if (ctl->curr_state == CCCI_FSM_READY) {
+		fsm_finish_command(ctl, cmd, 1);
+		return;
+	}
 	if (ctl->curr_state != CCCI_FSM_GATED) {
 		fsm_finish_command(ctl, cmd, -1);
 		fsm_routine_zombie(ctl);
@@ -448,6 +451,7 @@ static void fsm_routine_start(struct ccci_fsm_ctl *ctl,
 	}
 	if (needforcestop) {
 		fsm_finish_command(ctl, cmd, -1);
+		__pm_relax(&ctl->wakelock);
 		return;
 	}
 	/* 4. check result, finish command */
@@ -474,7 +478,7 @@ success:
 	ccci_md_post_start(ctl->md_id);
 	fsm_finish_command(ctl, cmd, 1);
 	__pm_relax(&ctl->wakelock);
-	__pm_wakeup_event(&ctl->wakelock, jiffies_to_msecs(10 * HZ));
+	__pm_wakeup_event(&ctl->wakelock, jiffies_to_msecs(5 * HZ));
 }
 
 static void fsm_routine_stop(struct ccci_fsm_ctl *ctl,
@@ -948,7 +952,7 @@ int ccci_fsm_recv_md_interrupt(int md_id, enum MD_IRQ_TYPE type)
 	if (!ctl)
 		return -CCCI_ERR_INVALID_PARAM;
 
-	__pm_wakeup_event(&ctl->wakelock, jiffies_to_msecs(10 * HZ));
+	__pm_wakeup_event(&ctl->wakelock, jiffies_to_msecs(5 * HZ));
 
 	if (type == MD_IRQ_WDT) {
 		fsm_append_command(ctl, CCCI_COMMAND_WDT, 0);

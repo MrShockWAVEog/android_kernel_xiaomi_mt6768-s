@@ -182,8 +182,6 @@ struct ccci_modem {
 	unsigned int md_wdt_irq_id;
 	unsigned long md_wdt_irq_flags;
 	atomic_t wdt_enabled;
-	char trm_wakelock_name[32];
-	struct wakeup_source trm_wake_lock;
 	atomic_t reset_on_going;
 
 	unsigned int hif_flag;
