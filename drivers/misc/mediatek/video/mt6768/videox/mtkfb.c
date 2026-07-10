@@ -2584,14 +2584,17 @@ static int __parse_tag_videolfb(struct device_node *node)
 {
 	struct tag_video_lfb *videolfb_tag = NULL;
 	unsigned long size = 0;
+	size_t lcm_len;
 
 	videolfb_tag = (struct tag_video_lfb *)of_get_property(node,
 		"atag,videolfb", (int *)&size);
 	if (videolfb_tag) {
 		memset((void *)mtkfb_lcm_name, 0, sizeof(mtkfb_lcm_name));
-		strncpy((char *)mtkfb_lcm_name, videolfb_tag->lcmname,
-			sizeof(mtkfb_lcm_name));
-		mtkfb_lcm_name[strlen(videolfb_tag->lcmname)] = '\0';
+		lcm_len = strnlen(videolfb_tag->lcmname, size);
+		if (lcm_len >= sizeof(mtkfb_lcm_name))
+			lcm_len = sizeof(mtkfb_lcm_name) - 1;
+		memcpy(mtkfb_lcm_name, videolfb_tag->lcmname, lcm_len);
+		mtkfb_lcm_name[lcm_len] = '\0';
 
 		lcd_fps = videolfb_tag->fps;
 		if (lcd_fps == 0)
@@ -2616,6 +2619,7 @@ int __init __parse_tag_ext_videolfb(unsigned long node)
 	struct tag_ext_videolfb *tag_ext_videolfb = NULL;
 	unsigned long size = 0;
 	char *lcm_name;
+	size_t lcm_len;
 
 	tag_ext_videolfb =
 		(struct tag_ext_videolfb *)of_get_flat_dt_prop(
@@ -2624,8 +2628,11 @@ int __init __parse_tag_ext_videolfb(unsigned long node)
 		lcm_name = tag_ext_videolfb->ext_lcmname;
 		memset((void *)ext_mtkfb_lcm_name, 0,
 			sizeof(ext_mtkfb_lcm_name));
-		strcpy((char *)ext_mtkfb_lcm_name, lcm_name);
-		ext_mtkfb_lcm_name[strlen(lcm_name)] = '\0';
+		lcm_len = strnlen(lcm_name, size);
+		if (lcm_len >= sizeof(ext_mtkfb_lcm_name))
+			lcm_len = sizeof(ext_mtkfb_lcm_name) - 1;
+		memcpy(ext_mtkfb_lcm_name, lcm_name, lcm_len);
+		ext_mtkfb_lcm_name[lcm_len] = '\0';
 
 		ext_lcd_fps = tag_ext_videolfb->ext_fps;
 		if (ext_lcd_fps == 0)
@@ -3364,4 +3371,3 @@ module_exit(mtkfb_cleanup);
 MODULE_DESCRIPTION("MEDIATEK framebuffer driver");
 MODULE_AUTHOR("Xuecheng Zhang <Xuecheng.Zhang@mediatek.com>");
 MODULE_LICENSE("GPL");
-

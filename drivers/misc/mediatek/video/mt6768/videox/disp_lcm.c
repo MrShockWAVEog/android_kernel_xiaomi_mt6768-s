@@ -1136,10 +1136,8 @@ struct disp_lcm_handle *disp_lcm_probe(char *plcm_name,
 		return NULL;
 	}
 
-	plcm = kzalloc(sizeof(uint8_t *) *
-		sizeof(struct disp_lcm_handle), GFP_KERNEL);
-	lcm_param = kzalloc(sizeof(uint8_t *) * sizeof(struct LCM_PARAMS),
-		GFP_KERNEL);
+	plcm = kzalloc(sizeof(*plcm), GFP_KERNEL);
+	lcm_param = kzalloc(sizeof(*lcm_param), GFP_KERNEL);
 	if (plcm && lcm_param) {
 		plcm->params = lcm_param;
 		plcm->drv = lcm_drv;
@@ -1249,10 +1247,8 @@ struct disp_lcm_handle *disp_ext_lcm_probe(char *plcm_name,
 		return NULL;
 	}
 
-	plcm = kzalloc(sizeof(uint8_t *) *
-		sizeof(struct disp_lcm_handle), GFP_KERNEL);
-	lcm_param = kzalloc(sizeof(uint8_t *) * sizeof(struct LCM_PARAMS),
-		GFP_KERNEL);
+	plcm = kzalloc(sizeof(*plcm), GFP_KERNEL);
+	lcm_param = kzalloc(sizeof(*lcm_param), GFP_KERNEL);
 	if (plcm && lcm_param) {
 		plcm->params = lcm_param;
 		plcm->drv = lcm_drv;
@@ -1956,4 +1952,3 @@ done:
 
 /*-------------------DynFPS end-----------------------------*/
 #endif
-
