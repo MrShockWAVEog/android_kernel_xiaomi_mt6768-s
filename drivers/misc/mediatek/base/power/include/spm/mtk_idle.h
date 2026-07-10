@@ -97,8 +97,6 @@ extern int mtk_idle_enter_dvt(int cpu);
 #define dpidle_active_status() is_mtk_idle_active()
 extern bool is_mtk_idle_active(void);
 
-/* Call as disp driver is ready */
-extern void mtk_idle_disp_is_ready(bool enable);
 
 
 /* --------------------------------------------------------
