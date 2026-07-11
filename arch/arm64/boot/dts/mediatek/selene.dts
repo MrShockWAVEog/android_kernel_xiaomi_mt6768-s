@@ -171,8 +171,8 @@
 /* flashlight end*/
 
 &i2c3 {
-	status = "okay";
-	nxp@28 {
+	status = "disable";
+	/*nxp@28 {
 		compatible = "nq-nci";
 		reg = <0x28>;
 		nq-irq = <&pio 9 0x00>;
@@ -183,7 +183,7 @@
 		nq-clkreq = <&pio 11 0x0>;
 		//nq-esepwr = <&tlmm 42 0x00>;
 		interrupt-names = "irq_nfc";
-	};
+	};*/
 
 };
 
@@ -376,6 +376,20 @@
 		reg = <0x4e>;
 		status = "okay";
 	};
+/*HQ-147485 nfc bring up by fenghaitao at 2021/8/5 start*/
+	nxp@28 {
+		compatible = "nq-nci";
+		reg = <0x28>;
+		nq-irq = <&pio 9 0x00>;
+		interrupt-parent = <&pio>;
+		interrupts = <9 IRQ_TYPE_LEVEL_HIGH 9 0>;
+		nq-ven = <&pio 159 0x0>;
+		nq-firm = <&pio 17 0x0>;
+		nq-clkreq = <&pio 11 0x0>;
+		//nq-esepwr = <&tlmm 42 0x00>;
+		interrupt-names = "irq_nfc";
+	};
+/*HQ-147485 nfc bring up by fenghaitao at 2021/8/5 end*/
 };
 /*K19A WXYFB-996 K19A charger bring up by miaozhichao at 2021/3/20 end*/
 
@@ -537,9 +551,7 @@
 	/*K19A HQHW-1022 K19A for JEITA  by langjunjun at 2021/7/15 end*/
 
 	temp_t4_thres = <60>;
-        /*HQ-166871 code for K19u by wanglicheng at 20211210 end */
-	temp_t4_thres_minus_x_degree = <58>;
-        /*HQ-166871  code for K19u by wanglicheng at 20211210 start */
+	temp_t4_thres_minus_x_degree = <60>;
 	temp_t3_thres = <48>;
 	temp_t3_thres_minus_x_degree = <48>;
 	temp_t2_thres = <10>;
