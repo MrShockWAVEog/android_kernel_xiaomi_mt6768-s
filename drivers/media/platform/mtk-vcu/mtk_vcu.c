@@ -609,12 +609,9 @@ static void vcu_gce_clear_inst_id(void *ctx)
 			gce_handle = vcu_ptr->gce_info[i].user_hdl;
 			vcu_ptr->gce_info[i].v4l2_ctx = NULL;
 			vcu_ptr->gce_info[i].user_hdl = 0;
-			temp = atomic_read(&vcu_ptr->gce_info[i].flush_pending);
-			/* flush_pending > 0, ctx hw not unprepared */
-			temp2 = atomic_read(&vcu_ptr->gce_info[i].flush_done);
-			/* flush_done > 0, user event not waited */
-			atomic_set(&vcu_ptr->gce_info[i].flush_done, 0);
-			atomic_set(&vcu_ptr->gce_info[i].flush_pending, 0);
+			/* use xchg so racy callbacks don't corrupt the read value */
+			temp = atomic_xchg(&vcu_ptr->gce_info[i].flush_pending, 0);
+			temp2 = atomic_xchg(&vcu_ptr->gce_info[i].flush_done, 0);
 			mutex_unlock(&vcu_ptr->vcu_share);
 			if (temp > 0)
 				vcu_aee_print(
