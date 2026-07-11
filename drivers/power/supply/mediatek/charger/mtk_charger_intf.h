@@ -483,16 +483,6 @@ struct charger_manager {
 	bool force_disable_pp[TOTAL_CHARGER];
 	bool enable_pp[TOTAL_CHARGER];
 	struct mutex pp_lock[TOTAL_CHARGER];
-
-	bool enable_sw_ffc;
-	int ffc_cv_1;
-	int ffc_cv_2;
-	int ffc_cv_3;
-	int ffc_cv_4;
-	int chg_cycle_count_level1;
-	int chg_cycle_count_level2;
-	int chg_cycle_count_level3;
-	int chg_cycle_count_level4;
 };
 
 struct chg_type_info {
