@@ -2015,7 +2015,8 @@ static int mtk_hp_spk_enable(struct mt6358_priv *priv)
 
 #ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
 	/* Switch HS MUX to audio DAC */
-	regmap_write(priv->regmap, MT6358_AUDDEC_ANA_CON6, 0x009b);
+	regmap_update_bits(priv->regmap, MT6358_AUDDEC_ANA_CON6,
+			   0x009F, 0x009B);
 
 	//lch inverse
 	regmap_update_bits(priv->regmap, MT6358_AFUNC_AUD_CON0,
@@ -2446,8 +2447,11 @@ static int mtk_hp_dual_spk_disable(struct mt6358_priv *priv)
 			0x1 << 6, 0x0);
 
 #ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
-	/* Switch HS MUX to audio DAC */
-	regmap_write(priv->regmap, MT6358_AUDDEC_ANA_CON6, 0x0090);
+	/* Power down HS driver */
+	regmap_update_bits(priv->regmap, MT6358_AUDDEC_ANA_CON6,
+			   RG_AUDHSPWRUP_VAUDP15_MASK_SFT |
+			   RG_AUDHSPWRUP_IBIAS_VAUDP15_MASK_SFT,
+			   0x0);
 #endif
 
 	/* disable Pull-down HPL/R to AVSS28_AUD */
@@ -2742,7 +2746,9 @@ static int mt_lo_event(struct snd_soc_dapm_widget *w,
 
 #ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
 	//lch inverse
-	 regmap_write(priv->regmap, MT6358_AFUNC_AUD_CON0,0xCFA1);
+	regmap_update_bits(priv->regmap, MT6358_AFUNC_AUD_CON0,
+			   0x1 << CCI_LCH_INV_SFT,
+			   0x1 << CCI_LCH_INV_SFT);
 #endif
 
 		break;
