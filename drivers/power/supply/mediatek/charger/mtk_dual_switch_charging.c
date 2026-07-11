@@ -566,63 +566,12 @@ done:
 	mutex_unlock(&swchgalg->ichg_aicr_access_mutex);
 }
 
-#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
-static u32 get_charge_cycle_count_level(struct charger_manager *info)
-{
-	struct power_supply *psy;
-	union power_supply_propval val;
-	int  ret;
-	u32 ffc_constant_voltage = 0;
-
-	psy = power_supply_get_by_name("battery");
-	if (!psy) {
-		pr_err("%s : power_supply_get_by_name error!\n", __func__);
-	}
-
-	ret = power_supply_get_property(psy, POWER_SUPPLY_PROP_CYCLE_COUNT, &val);
-	if (ret) {
-		pr_err("%s : power_supply_get_property error!\n", __func__);
-	}
-
-	pr_err("%s : charger cycle count  = %d\n", __func__, val.intval);
-
-	if ((val.intval >= info->chg_cycle_count_level1) && (val.intval <= (info->chg_cycle_count_level2 - 1)))
-		ffc_constant_voltage = info->ffc_cv_1;
-
-	if ((val.intval > info->chg_cycle_count_level2) && (val.intval <= (info->chg_cycle_count_level3 - 1)))
-		ffc_constant_voltage = info->ffc_cv_2;
-
-	if ((val.intval > info->chg_cycle_count_level3) && (val.intval <= (info->chg_cycle_count_level4 - 1)))
-		ffc_constant_voltage = info->ffc_cv_3;
-
-	if (val.intval >= info->chg_cycle_count_level4)
-		ffc_constant_voltage = info->ffc_cv_4;
-
-	return  ffc_constant_voltage;
-}
-#endif
-
 static void swchg_select_cv(struct charger_manager *info)
 {
-#ifndef CONFIG_TARGET_PRODUCT_SELENECOMMON
-	u32 constant_voltage;
-#else
 	u32 constant_voltage = 4450000;
 	u32 dynamic_cv = 0;
-#endif
 	bool chg2_chip_enabled = false;
 
-#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
-	u32 ffc_constant_voltage = 0;
-	ffc_constant_voltage = get_charge_cycle_count_level(info);
-
-	if (info->enable_sw_ffc) {
-		if (ffc_constant_voltage != 0) {
-			chr_err("%s, ffc_constant_voltage  = %d\n", __func__, ffc_constant_voltage);
-			constant_voltage = ffc_constant_voltage;
-		}
-	}
-#endif
 
 	charger_dev_is_chip_enabled(info->chg2_dev, &chg2_chip_enabled);
 
@@ -634,7 +583,7 @@ static void swchg_select_cv(struct charger_manager *info)
 							info->sw_jeita.cv);
 			return;
 #else
-			if ( constant_voltage > info->sw_jeita.cv) {
+			if (constant_voltage > info->sw_jeita.cv) {
 				constant_voltage =  info->sw_jeita.cv;
 			}
 #endif
