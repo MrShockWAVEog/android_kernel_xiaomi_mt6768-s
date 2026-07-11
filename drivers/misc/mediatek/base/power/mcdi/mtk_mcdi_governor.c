@@ -236,6 +236,9 @@ static void mcdi_set_timer(int cpu)
 	if (!tick_nohz_tick_stopped())
 		return;
 
+	if (!mcdi_cluster.timer.function)
+		return;
+
 	thresh = get_mcdi_status(cpu)->next_timer_us
 			- get_mcdi_status(cpu)->predict_us;
 
