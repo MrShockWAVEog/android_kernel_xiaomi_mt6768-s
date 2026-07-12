@@ -714,13 +714,12 @@ int mcdi_enter(int cpu)
 
 		mcdi_cluster_counter_set_cpu_residency(cpu);
 
-		mtk_enter_idle_state(MTK_MCDI_CPU_MODE);
+		if (mtk_enter_idle_state(MTK_MCDI_CPU_MODE) > 0)
+			mcdi_cnt_cpu[cpu]++;
 
 		aee_rr_rec_mcdi_val(cpu, 0x0);
 
 		trace_mcdi_rcuidle(cpu, 0);
-
-		mcdi_cnt_cpu[cpu]++;
 
 		break;
 	case MCDI_STATE_CLUSTER_OFF:
@@ -731,13 +730,8 @@ int mcdi_enter(int cpu)
 
 		mcdi_cluster_counter_set_cpu_residency(cpu);
 
-		mtk_enter_idle_state(MTK_MCDI_CLUSTER_MODE);
-
-		aee_rr_rec_mcdi_val(cpu, 0x0);
-
-		trace_mcdi_rcuidle(cpu, 0);
-
-		mcdi_cnt_cpu[cpu]++;
+		if (mtk_enter_idle_state(MTK_MCDI_CLUSTER_MODE) > 0)
+			mcdi_cnt_cpu[cpu]++;
 
 		break;
 	case MCDI_STATE_SODI:
