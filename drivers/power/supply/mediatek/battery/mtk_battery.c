@@ -470,8 +470,12 @@ static int bms_get_property(struct power_supply *psy,
 		break;
 	case POWER_SUPPLY_PROP_CHARGE_FULL:
 		pr_err("gm.algo_qmax:%d gm.aging_factor:%d\n", gm.algo_qmax, gm.aging_factor);
+#ifndef CONFIG_TARGET_PRODUCT_SELENECOMMON
 		if (mtk_qmax_aging < 50200)
 			qmax = mtk_qmax_aging * 100;
+#else
+		qmax = gm.algo_qmax * gm.aging_factor / 100;
+#endif
 		val->intval = qmax;
 		break;
 	case POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN:
@@ -661,8 +665,12 @@ static int battery_get_property(struct power_supply *psy,
 		break;
 	case POWER_SUPPLY_PROP_CHARGE_FULL:
 		pr_err("gm.algo_qmax:%d gm.aging_factor:%d\n", gm.algo_qmax, gm.aging_factor);
+#ifndef CONFIG_TARGET_PRODUCT_SELENECOMMON
 		if (mtk_qmax_aging < 50200)
 			qmax = mtk_qmax_aging * 100;
+#else
+		qmax = gm.algo_qmax * gm.aging_factor / 100;
+#endif
 		val->intval = qmax;
 		break;
 	case POWER_SUPPLY_PROP_CHARGE_COUNTER:
