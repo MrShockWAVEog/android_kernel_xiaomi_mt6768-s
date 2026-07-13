@@ -779,10 +779,7 @@ static void push_table(struct LCM_setting_table *table,
 		switch (cmd) {
 
 		case REGFLAG_DELAY:
-			if (table[i].count <= 10)
-				MDELAY(table[i].count);
-			else
-				MDELAY(table[i].count);
+			MDELAY(table[i].count);
 			break;
 
 		case REGFLAG_END_OF_TABLE:
