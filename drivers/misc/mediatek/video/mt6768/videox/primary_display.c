@@ -8428,31 +8428,10 @@ int _set_lcm_cmd_by_cmdq(unsigned int *lcm_cmd, unsigned int *lcm_count,
 		mmprofile_log_ex(ddp_mmp_get_events()->primary_set_cmd,
 			MMPROFILE_FLAG_PULSE, 1, 2);
 		cmdqRecReset(cmdq_handle_lcm_cmd);
-		if (bdg_is_bdg_connected() == 1) {
-			cmdqRecWait(cmdq_handle_lcm_cmd, CMDQ_EVENT_MUTEX0_STREAM_EOF);
-			/* stop dsi vdo mode */
-			dpmgr_path_build_cmdq(primary_get_dpmgr_handle(),
-				cmdq_handle_lcm_cmd, CMDQ_STOP_VDO_MODE, 0);
-			disp_lcm_set_lcm_cmd(pgc->plcm, cmdq_handle_lcm_cmd, lcm_cmd,
-				 lcm_count, lcm_value);
-			dpmgr_path_build_cmdq(primary_get_dpmgr_handle(), cmdq_handle_lcm_cmd,
-				CMDQ_START_VDO_MODE, 0);
-			cmdqRecClearEventToken(cmdq_handle_lcm_cmd, CMDQ_EVENT_MUTEX0_STREAM_EOF);
-
-			dpmgr_path_trigger(primary_get_dpmgr_handle(),
-				cmdq_handle_lcm_cmd, CMDQ_ENABLE);
-			ddp_mutex_set_sof_wait(dpmgr_path_get_mutex(
-				primary_get_dpmgr_handle()), cmdq_handle_lcm_cmd, 0);
-
-			/* Async flush by cmdq */
-			_cmdq_flush_config_handle_mira(cmdq_handle_lcm_cmd, 0);
-		} else {
-			_cmdq_insert_wait_frame_done_token_mira(cmdq_handle_lcm_cmd);
-			disp_lcm_set_lcm_cmd(pgc->plcm, cmdq_handle_lcm_cmd, lcm_cmd,
-				lcm_count, lcm_value);
-			/* Async flush by cmdq */
-			_cmdq_flush_config_handle_mira(cmdq_handle_lcm_cmd, 0);
-		}
+		disp_lcm_set_lcm_cmd(pgc->plcm, cmdq_handle_lcm_cmd, lcm_cmd,
+			lcm_count, lcm_value);
+		/* Async flush by cmdq */
+		_cmdq_flush_config_handle_mira(cmdq_handle_lcm_cmd, 0);
 		DISPCHECK("[CMD]%s ret=%d\n", __func__, ret);
 	} else {
 		mmprofile_log_ex(ddp_mmp_get_events()->primary_set_bl,
