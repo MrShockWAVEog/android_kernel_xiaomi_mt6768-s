@@ -476,6 +476,7 @@ ccflags-y += -I$(srctree)/drivers/misc/mediatek/connectivity/common
 ccflags-y += -I$(srctree)/drivers/devfreq/
 ccflags-y += -I$(srctree)/net
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/connectivity/connfem/include/
+ccflags-$(CONFIG_TARGET_PRODUCT_SELENECOMMON) += -I$(srctree)/drivers/misc/hqsysfs/
 
 ifneq ($(CONFIG_MTK_MDDP_SUPPORT),)
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/mddp/include/

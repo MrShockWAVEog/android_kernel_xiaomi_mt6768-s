@@ -51,6 +51,11 @@
  *****************************************************************************/
 #include "precomp.h"
 
+#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
+#include "hqsys_pcba.h"
+extern PCBA_CONFIG get_huaqin_pcba_config(void);
+#endif
+
 void
 p2pRoleStateInit_IDLE(IN struct ADAPTER *prAdapter,
 		IN struct P2P_ROLE_FSM_INFO *prP2pRoleFsmInfo,
@@ -160,6 +165,11 @@ p2pRoleStateAbort_REQING_CHANNEL(IN struct ADAPTER *prAdapter,
 		IN enum ENUM_P2P_ROLE_STATE eNextState)
 {
 	u_int8_t fgIsStartGO = FALSE;
+#if CFG_HOTSPOT_SUPPORT_ADJUST_SCC
+#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
+    int huaqin_pcba_config;
+#endif
+#endif
 
 	do {
 		ASSERT_BREAK((prAdapter != NULL)
@@ -198,6 +208,26 @@ p2pRoleStateAbort_REQING_CHANNEL(IN struct ADAPTER *prAdapter,
 	} while (FALSE);
 
 #if CFG_HOTSPOT_SUPPORT_ADJUST_SCC
+#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
+	huaqin_pcba_config = get_huaqin_pcba_config();
+switch (huaqin_pcba_config) {
+case PCBA_K19S_P0_CN:
+case PCBA_K19S_P0_GLOBAL:
+case PCBA_K19S_P0_1_CN:
+case PCBA_K19S_P0_1_GLOBAL:
+case PCBA_K19S_P1_CN:
+case PCBA_K19S_P1_GLOBAL:
+case PCBA_K19S_P1_1_CN:
+case PCBA_K19S_P1_1_GLOBAL:
+case PCBA_K19S_P2_CN:
+case PCBA_K19S_P2_GLOBAL:
+case PCBA_K19S_MP_CN:
+case PCBA_K19S_MP_GLOBAL:
+    DBGLOG(RLM, ERROR,
+        "Selenes device doesn't support SCC, how bad :D");
+    return;
+}
+#endif
 	if (fgIsStartGO && p2pFuncIsAPMode(prAdapter->rWifiVar.
 			prP2PConnSettings[prP2pRoleFsmInfo->ucRoleIndex])) {
 		struct GL_P2P_INFO *prP2PInfo =	prAdapter->prGlueInfo
