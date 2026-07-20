@@ -544,7 +544,7 @@ static inline int tcpci_set_wake_lock_pd(
 		wake_lock_pd--;
 
 	if (wake_lock_pd == 0)
-		__pm_wakeup_event(tcpc->detach_wake_lock, 5000);
+		__pm_wakeup_event(tcpc->detach_wake_lock, 2500);
 
 	tcpci_set_wake_lock(tcpc, wake_lock_pd, tcpc->wake_lock_user);
 
