@@ -10174,13 +10174,13 @@ static bool update_sd_pick_busiest(struct lb_env *env,
 		goto asym_packing;
 
 	/*
-	 * Candidate sg has no more than one task per CPU and
-	 * has higher per-CPU capacity. Migrating tasks to less
-	 * capable CPUs may harm throughput. Maximize throughput,
-	 * power/energy consequences are not considered.
+	 * Candidate sg has at most one runnable task per CPU and has
+	 * higher per-CPU capacity. Keep the throughput optimization only
+	 * for very light load to avoid unnecessary task bouncing.
 	 */
 	if (sgs->sum_nr_running <= sgs->group_weight &&
-	    group_smaller_min_cpu_capacity(sds->local, sg))
+	    group_smaller_min_cpu_capacity(sds->local, sg) &&
+	    sgs->sum_nr_running == 1)
 		return false;
 
 	/*
