@@ -22,6 +22,7 @@
 #include <linux/of_platform.h>
 #include <linux/soc/mediatek/pmic_wrap.h>
 #include <linux/regmap.h>
+#include <linux/syscore_ops.h>
 #include <linux/mfd/mt6358/core.h>
 
 #include <mt-plat/upmu_common.h>
@@ -559,6 +560,8 @@ static struct regmap_bus regmap_pmic_ipi_bus = {
 };
 #endif
 
+static struct syscore_ops pmic_mt_syscore_ops;
+
 static int pmic_mt_probe(struct platform_device *pdev)
 {
 	int ret = 0;
@@ -619,6 +622,8 @@ static int pmic_mt_probe(struct platform_device *pdev)
 	if (IS_ENABLED(CONFIG_MTK_BIF_SUPPORT))
 		pmic_bif_init();
 
+	register_syscore_ops(&pmic_mt_syscore_ops);
+
 	return ret;
 }
 
@@ -635,7 +640,7 @@ static void pmic_mt_shutdown(struct platform_device *pdev)
 	vmd1_pmic_setting_on();
 }
 
-static int pmic_mt_suspend(struct platform_device *pdev, pm_message_t state)
+static int pmic_mt_syscore_suspend(void)
 {
 	PMICLOG("******** MT pmic driver suspend!! ********\n");
 
@@ -644,14 +649,18 @@ static int pmic_mt_suspend(struct platform_device *pdev, pm_message_t state)
 	return 0;
 }
 
-static int pmic_mt_resume(struct platform_device *pdev)
+static void pmic_mt_syscore_resume(void)
 {
 	PMICLOG("******** MT pmic driver resume!! ********\n");
 
 	pmic_throttling_dlpt_resume();
 	pmic_auxadc_resume();
-	return 0;
 }
+
+static struct syscore_ops pmic_mt_syscore_ops = {
+	.suspend = pmic_mt_syscore_suspend,
+	.resume = pmic_mt_syscore_resume,
+};
 
 static const struct of_device_id pmic_of_match[] = {
 	{.compatible = "mediatek,mt-pmic"},
@@ -662,8 +671,6 @@ static struct platform_driver pmic_mt_driver = {
 	.probe = pmic_mt_probe,
 	.remove = pmic_mt_remove,
 	.shutdown = pmic_mt_shutdown,
-	.suspend = pmic_mt_suspend,
-	.resume = pmic_mt_resume,
 	.driver = {
 		.name = "mt-pmic",
 		.of_match_table = pmic_of_match,
