@@ -17,6 +17,7 @@
 #include <linux/workqueue.h>
 #include <linux/atomic.h>
 #include <linux/module.h>
+#include <linux/slab.h>
 #include <linux/version.h>
 #include <ged_kpi.h>
 #include <ged_base.h>
@@ -253,6 +254,12 @@ static long long vsync_period = GED_KPI_SEC_DIVIDER / GED_KPI_MAX_FPS;
 static GED_LOG_BUF_HANDLE ghLogBuf_KPI;
 static struct workqueue_struct *g_psWorkQueue;
 static struct workqueue_struct *g_FenceWorkQueue;
+
+/* slab caches for per-frame hot-path objects: avoids kmalloc/kfree
+ * churn on the render thread. Freed objects are recycled by the slab.
+ */
+static struct kmem_cache *gpsTimeStampCache;
+static struct kmem_cache *gpsGpuTSCache;
 
 static GED_HASHTABLE_HANDLE gs_hashtable;
 
@@ -1994,7 +2001,7 @@ static void ged_kpi_work_cb(struct work_struct *psWork)
 		break;
 	}
 work_cb_end:
-	ged_free(psTimeStamp, sizeof(struct GED_TIMESTAMP));
+	kmem_cache_free(gpsTimeStampCache, psTimeStamp);
 }
 /* ------------------------------------------------------------------- */
 static GED_ERROR ged_kpi_push_timestamp(
@@ -2012,10 +2019,9 @@ static GED_ERROR ged_kpi_push_timestamp(
 	unsigned long ui32IRQFlags;
 #endif /* GED_ENABLE_FB_DVFS */
 
-	if (g_psWorkQueue && is_GED_KPI_enabled) {
+	if (g_psWorkQueue && is_GED_KPI_enabled && gpsTimeStampCache) {
 		struct GED_TIMESTAMP *psTimeStamp =
-			(struct GED_TIMESTAMP *)ged_alloc_atomic(
-			sizeof(struct GED_TIMESTAMP));
+			kmem_cache_alloc(gpsTimeStampCache, GFP_ATOMIC);
 #ifdef GED_ENABLE_FB_DVFS
 		unsigned int pui32Block, pui32Idle;
 #endif /* GED_ENABLE_FB_DVFS */
@@ -2150,7 +2156,7 @@ static void ged_kpi_fence_put_cb(struct work_struct *psWork)
 
 	if (psMonitor != NULL) {
 		dma_fence_put(psMonitor->psSyncFence);
-		ged_free(psMonitor, sizeof(struct GED_KPI_GPU_TS));
+		kmem_cache_free(gpsGpuTSCache, psMonitor);
 	}
 }
 static
@@ -2215,10 +2221,16 @@ GED_ERROR ged_kpi_dequeue_buffer_ts(int pid, u64 ullWdnd, int i32FrameID,
 	struct GED_KPI_GPU_TS *psMonitor;
 	struct dma_fence *psSyncFence;
 
+	/* skip all per-frame fence/alloc work when KPI is runtime-disabled
+	 * or when init has not set up the slab caches
+	 */
+	if (!is_GED_KPI_enabled || !gpsGpuTSCache)
+		return GED_OK;
+
 	psSyncFence = sync_file_get_fence(fence_fd);
 
 	psMonitor =
-	(struct GED_KPI_GPU_TS *)ged_alloc(sizeof(struct GED_KPI_GPU_TS));
+	kmem_cache_alloc(gpsGpuTSCache, GFP_KERNEL);
 
 	if (!psMonitor) {
 		pr_info("[GED_KPI]: GED_ERROR_OOM in %s\n",
@@ -2234,7 +2246,7 @@ GED_ERROR ged_kpi_dequeue_buffer_ts(int pid, u64 ullWdnd, int i32FrameID,
 	psMonitor->i32FrameID = i32FrameID;
 
 	if (psMonitor->psSyncFence == NULL) {
-		ged_free(psMonitor, sizeof(struct GED_KPI_GPU_TS));
+		kmem_cache_free(gpsGpuTSCache, psMonitor);
 		ret = ged_kpi_timeP(pid, ullWdnd, i32FrameID);
 	} else {
 		ret = dma_fence_add_callback(psMonitor->psSyncFence,
@@ -2242,7 +2254,7 @@ GED_ERROR ged_kpi_dequeue_buffer_ts(int pid, u64 ullWdnd, int i32FrameID,
 
 		if (ret < 0) {
 			dma_fence_put(psMonitor->psSyncFence);
-			ged_free(psMonitor, sizeof(struct GED_KPI_GPU_TS));
+			kmem_cache_free(gpsGpuTSCache, psMonitor);
 			ret = ged_kpi_timeP(pid, ullWdnd, i32FrameID);
 		}
 	}
@@ -2260,6 +2272,12 @@ GED_ERROR ged_kpi_queue_buffer_ts(int pid, u64 ullWdnd, int i32FrameID,
 	struct GED_KPI_GPU_TS *psMonitor;
 	struct dma_fence *psSyncFence;
 
+	/* skip all per-frame fence/alloc work when KPI is runtime-disabled
+	 * or when init has not set up the slab caches
+	 */
+	if (!is_GED_KPI_enabled || !gpsGpuTSCache)
+		return GED_OK;
+
 	psSyncFence = sync_file_get_fence(fence_fd);
 
 	ret = ged_kpi_time1(pid, ullWdnd, i32FrameID, QedBuffer_length,
@@ -2269,7 +2287,7 @@ GED_ERROR ged_kpi_queue_buffer_ts(int pid, u64 ullWdnd, int i32FrameID,
 		return ret;
 
 	psMonitor =
-	(struct GED_KPI_GPU_TS *)ged_alloc(sizeof(struct GED_KPI_GPU_TS));
+	kmem_cache_alloc(gpsGpuTSCache, GFP_KERNEL);
 
 	if (!psMonitor) {
 		pr_info("[GED_KPI]: GED_ERROR_OOM in %s\n",
@@ -2283,7 +2301,7 @@ GED_ERROR ged_kpi_queue_buffer_ts(int pid, u64 ullWdnd, int i32FrameID,
 	psMonitor->i32FrameID = i32FrameID;
 
 	if (psMonitor->psSyncFence == NULL) {
-		ged_free(psMonitor, sizeof(struct GED_KPI_GPU_TS));
+		kmem_cache_free(gpsGpuTSCache, psMonitor);
 		ret = ged_kpi_time2(pid, ullWdnd, i32FrameID);
 	} else {
 
@@ -2293,7 +2311,7 @@ GED_ERROR ged_kpi_queue_buffer_ts(int pid, u64 ullWdnd, int i32FrameID,
 
 		if (ret < 0) {
 			dma_fence_put(psMonitor->psSyncFence);
-			ged_free(psMonitor, sizeof(struct GED_KPI_GPU_TS));
+			kmem_cache_free(gpsGpuTSCache, psMonitor);
 			ret = ged_kpi_time2(pid, ullWdnd, i32FrameID);
 		}
 	}
@@ -2436,6 +2454,19 @@ GED_ERROR ged_kpi_system_init(void)
 		return GED_ERROR_FAIL;
 	}
 
+	gpsTimeStampCache = kmem_cache_create("ged_kpi_ts",
+		sizeof(struct GED_TIMESTAMP), 0, SLAB_HWCACHE_ALIGN, NULL);
+	gpsGpuTSCache = kmem_cache_create("ged_kpi_gpu_ts",
+		sizeof(struct GED_KPI_GPU_TS), 0, SLAB_HWCACHE_ALIGN, NULL);
+	if (!gpsTimeStampCache || !gpsGpuTSCache) {
+		GED_PR_DEBUG("[GED_KPI][Exception]: kmem_cache_create failed\n");
+		kmem_cache_destroy(gpsTimeStampCache);
+		kmem_cache_destroy(gpsGpuTSCache);
+		gpsTimeStampCache = NULL;
+		gpsGpuTSCache = NULL;
+		return GED_ERROR_FAIL;
+	}
+
 	g_psWorkQueue =
 		alloc_ordered_workqueue("ged_kpi",
 			WQ_FREEZABLE | WQ_MEM_RECLAIM);
@@ -2453,8 +2484,14 @@ GED_ERROR ged_kpi_system_init(void)
 #ifdef GED_ENABLE_TIMER_BASED_DVFS_MARGIN
 		spin_lock_init(&gs_hashtableLock);
 #endif /* GED_ENABLE_TIMER_BASED_DVFS_MARGIN */
-		return gs_hashtable ? GED_OK : GED_ERROR_FAIL;
+		if (gs_hashtable)
+			return GED_OK;
 	}
+	/* init failed: tear down caches to avoid leaking them */
+	kmem_cache_destroy(gpsTimeStampCache);
+	kmem_cache_destroy(gpsGpuTSCache);
+	gpsTimeStampCache = NULL;
+	gpsGpuTSCache = NULL;
 	return GED_ERROR_FAIL;
 #else
 	return GED_OK;
@@ -2476,6 +2513,13 @@ void ged_kpi_system_exit(void)
 #endif /* GED_ENABLE_TIMER_BASED_DVFS_MARGIN */
 	destroy_workqueue(g_psWorkQueue);
 	destroy_workqueue(g_FenceWorkQueue);
+	/* workqueues drained above, so no in-flight objects reference the
+	 * caches; safe to destroy.
+	 */
+	kmem_cache_destroy(gpsTimeStampCache);
+	kmem_cache_destroy(gpsGpuTSCache);
+	gpsTimeStampCache = NULL;
+	gpsGpuTSCache = NULL;
 	ged_thread_destroy(ghThread);
 #ifndef GED_BUFFER_LOG_DISABLE
 	ged_log_buf_free(ghLogBuf_KPI);
