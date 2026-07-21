@@ -151,12 +151,16 @@ spm_go_to_sleep_ex(unsigned int ex_flag)
 {
 	unsigned int bRet = 0;
 
+#if SLP_SLEEP_DPIDLE_EN
 	if ((ex_flag & SPM_SUSPEND_PLAT_SLP_DP) != 0)
 		pr_debug(
 			"[name:spm&][%s:%d] - Spm suspend sleep dpidle not support!!\n"
 			, __func__, __LINE__);
 	else
 		bRet = spm_go_to_sleep();
+#else
+	bRet = spm_go_to_sleep();
+#endif
 	return bRet;
 }
 
@@ -242,6 +246,8 @@ static int slp_suspend_ops_enter(suspend_state_t state)
 			SPM_SUSPEND_PLAT_SLP_DP);
 		slp_dp_cnt[smp_processor_id()]++;
 	} else {
+#else
+	if (1) {
 #endif
 		mtk_suspend_cond_info();
 
