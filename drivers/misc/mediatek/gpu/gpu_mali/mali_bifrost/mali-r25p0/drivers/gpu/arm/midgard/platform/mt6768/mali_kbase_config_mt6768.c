@@ -21,6 +21,7 @@
  */
 
 #include <linux/ioport.h>
+#include <linux/iopoll.h>
 #include <linux/of.h>
 #include <linux/of_address.h>
 #include <linux/device.h>
@@ -64,10 +65,11 @@ static void __mtk_check_MFG_idle(void)
 	/* polling register MFG_DEBUG_TOP (0x13000178) bit 2 = 0x1 */
 	/* => 1 for GPU (BUS) idle, 0 for GPU (BUS) non-idle */
 	/* do not care about 0x13000174 */
-	do {
-		val = readl(g_MFG_base + 0x178);
-		mali_pr_debug("@%s: 0x13000178 val = 0x%x\n", __func__, val);
-	} while ((val & 0x4) != 0x4);
+	/* Poll every 10us for up to 5ms to avoid hanging the GPU; log timeout. */
+	if (readl_poll_timeout(g_MFG_base + 0x178, val,
+			(val & 0x4) == 0x4, 10, 5000))
+		mali_pr_debug("@%s: timed out waiting for MFG idle, val=0x%x\n",
+			__func__, val);
 }
 
 static void __mtk_enable_MFG_internal_CG(void)
