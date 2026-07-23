@@ -3524,7 +3524,7 @@ void set_numabalancing_state(bool enabled)
 
 #ifdef CONFIG_PROC_SYSCTL
 int sysctl_numa_balancing(struct ctl_table *table, int write,
-			 void __user *buffer, size_t *lenp, loff_t *ppos)
+			  void *buffer, size_t *lenp, loff_t *ppos)
 {
 	struct ctl_table t;
 	int err;
@@ -3598,8 +3598,8 @@ static void __init init_schedstats(void)
 }
 
 #ifdef CONFIG_PROC_SYSCTL
-int sysctl_schedstats(struct ctl_table *table, int write,
-			 void __user *buffer, size_t *lenp, loff_t *ppos)
+int sysctl_schedstats(struct ctl_table *table, int write, void *buffer,
+		size_t *lenp, loff_t *ppos)
 {
 	struct ctl_table t;
 	int err;
@@ -6119,6 +6119,10 @@ again:
 
 		retval = -EINVAL;
 	}
+
+	if (!retval && !(p->flags & PF_KTHREAD))
+		cpumask_and(&p->cpus_requested, in_mask, cpu_possible_mask);
+
 out_free_new_mask:
 	free_cpumask_var(new_mask);
 out_free_cpus_allowed:
@@ -7566,6 +7570,7 @@ void __init sched_init_smp(void)
 	/* Move init over to a non-isolated CPU */
 	if (set_cpus_allowed_ptr(current, non_isolated_cpus) < 0)
 		BUG();
+	cpumask_copy(&current->cpus_requested, cpu_possible_mask);
 	sched_init_granularity();
 	free_cpumask_var(non_isolated_cpus);
 
