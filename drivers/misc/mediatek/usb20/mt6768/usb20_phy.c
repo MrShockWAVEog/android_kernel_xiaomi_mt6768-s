@@ -757,7 +757,7 @@ void usb_phy_recover(void)
 		DBG(0, "apply efuse setting, RG_USB20_INTR_CAL=0x%x\n",
 			efuse_val);
 		USBPHY_CLR32(0x04, (0x1F<<19));
-		USBPHY_SET32(0x04, (0x1D<<19));
+		USBPHY_SET32(0x04, (efuse_val<<19));
 	}
 
 	/* RG_USB20_DISCTH[7:4], 4'b0111 for 700 mV */
