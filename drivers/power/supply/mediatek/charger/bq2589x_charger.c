@@ -1126,7 +1126,7 @@ static void bq2589x_read_byte_work(struct work_struct *work)
 				bq2589x_dm_set_0P6V(bq);
 				bq2589x_enable_auto_dpdm(bq, true);
 				bq2589x_force_dpdm(bq);
-				mdelay(2000);
+				msleep(300);
 				Charger_Detect_Release();
 				pr_err("foce NONSTD ti\n");
 			} 
