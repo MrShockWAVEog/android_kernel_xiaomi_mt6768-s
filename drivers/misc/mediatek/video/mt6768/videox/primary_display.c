@@ -3794,8 +3794,6 @@ int primary_display_init(char *lcm_name, unsigned int lcm_fps,
 			set_mt6382_init(0);
 	}
 
-	pgc->vfp_chg_sync_bdg = true;
-
 	init_cmdq_slots(&(pgc->ovl_config_time), 3, 0);
 	init_cmdq_slots(&(pgc->cur_config_fence),
 		DISP_SESSION_TIMELINE_COUNT, 0);
@@ -4172,6 +4170,9 @@ int primary_display_init(char *lcm_name, unsigned int lcm_fps,
 
 	pgc->lcm_fps = lcm_fps;
 	pgc->lcm_refresh_rate = 60;
+/* Huaqin modify for HQ-179522 by jiangyue at 2022/01/24 start */
+	pgc->vfp_chg_sync_bdg = false;
+/* Huaqin modify for HQ-179522 by jiangyue at 2022/01/24 end */
 	/* keep lowpower init after setting lcm_fps */
 	primary_display_lowpower_init();
 
@@ -8428,6 +8429,7 @@ int _set_lcm_cmd_by_cmdq(unsigned int *lcm_cmd, unsigned int *lcm_count,
 		mmprofile_log_ex(ddp_mmp_get_events()->primary_set_cmd,
 			MMPROFILE_FLAG_PULSE, 1, 2);
 		cmdqRecReset(cmdq_handle_lcm_cmd);
+		_cmdq_insert_wait_frame_done_token_mira(cmdq_handle_lcm_cmd);
 		disp_lcm_set_lcm_cmd(pgc->plcm, cmdq_handle_lcm_cmd, lcm_cmd,
 			lcm_count, lcm_value);
 		/* Async flush by cmdq */
