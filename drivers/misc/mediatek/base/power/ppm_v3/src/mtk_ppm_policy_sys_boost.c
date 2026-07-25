@@ -576,7 +576,7 @@ static int __init ppm_sysboost_policy_init(void)
 	ppm_info("@%s: register %s done!\n", __func__, sysboost_policy.name);
 
 out:
-	sysboost_policy.is_enabled = true;
+	sysboost_policy.is_enabled = false;
 	FUNC_EXIT(FUNC_LV_POLICY);
 
 	return ret;
