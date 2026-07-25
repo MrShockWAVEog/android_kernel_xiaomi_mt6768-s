@@ -1553,7 +1553,12 @@ void ccci_modem_restore_reg(struct ccci_modem *md)
 
 int ccci_modem_syssuspend(void)
 {
+	struct ccci_modem *md;
+
 	CCCI_DEBUG_LOG(0, TAG, "%s\n", __func__);
+	md = ccci_md_get_modem_by_id(0);
+	if (md != NULL)
+		ccci_hif_suspend(md->index, md->hif_flag);
 	return 0;
 }
 
