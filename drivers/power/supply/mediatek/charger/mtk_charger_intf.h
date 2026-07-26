@@ -140,12 +140,8 @@ enum {
  * T4: 50 degree Celsius
  */
 enum sw_jeita_state_enum {
-#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
 	TEMP_BELOW_NEG_T0 = 0,
 	TEMP_BELOW_T0,
-#else
-	TEMP_BELOW_T0 = 0,
-#endif
 	TEMP_T0_TO_T1,
 	TEMP_T1_TO_T2,
 	TEMP_T2_TO_T3,

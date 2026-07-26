@@ -19,10 +19,8 @@
 #include <mt-plat/mtk_boot.h>
 #include "mtk_charger_intf.h"
 #include "mtk_dual_switch_charging.h"
-#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
 extern enum hvdcp_status hvdcp_type_tmp;
 extern int call_mode;
-#endif
 
 static int _uA_to_mA(int uA)
 {
@@ -293,7 +291,6 @@ dual_swchg_select_charging_current_limit(struct charger_manager *info)
 					info->data.ac_charger_input_current;
 		pdata->charging_current_limit =
 					info->data.ac_charger_current;
-#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
 		switch (info->usb_psy->desc->type) {
 		case POWER_SUPPLY_TYPE_USB_HVDCP:
 				pdata->input_current_limit = 2000000;
@@ -306,11 +303,10 @@ dual_swchg_select_charging_current_limit(struct charger_manager *info)
 		default:
 				break;
 		}
-		if(hvdcp_type_tmp == HVDCP){
+		if(hvdcp_type_tmp == HVDCP) {
 				pdata->input_current_limit = 2000000;
 				pdata->charging_current_limit = 3000000;
 		}
-#endif
 		mtk_pe20_set_charging_current(info,
 					&pdata->charging_current_limit,
 					&pdata->input_current_limit);
@@ -359,12 +355,6 @@ dual_swchg_select_charging_current_limit(struct charger_manager *info)
 				info->data.apple_2_1a_charger_current;
 		pdata->charging_current_limit =
 				info->data.apple_2_1a_charger_current;
-#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
-	} else if (info->chr_type == HVDCP_CHARGER) {
-          pdata->input_current_limit = 2000000;
-          pdata->charging_current_limit = 6000000;
-          pr_err("HVDCP_CHARGER set icl\n");
-#endif
 	}
 
 #ifndef CONFIG_TARGET_PRODUCT_SELENECOMMON
@@ -476,14 +466,15 @@ dual_swchg_select_charging_current_limit(struct charger_manager *info)
 					pdata->input_current_limit_by_aicl;
 	}
 
-#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
-	if (call_mode >= 0) {
-		if (pdata->charging_current_limit >= (call_mode*1000)) {
-			pdata->charging_current_limit = (call_mode*1000);
-			pr_err("call mode is %d\n", call_mode*1000);
+
+	if (call_mode != -1) { /* mtk_switch_charging */
+		if (pdata->input_current_limit > call_mode) {
+			pdata->input_current_limit = call_mode;
+			pdata->charging_current_limit = call_mode;
+			pr_err("call mode is %d\n", call_mode);
 		}
 	}
-#endif
+
 done:
 	if (info->data.parallel_vbus) {
 		pdata->input_current_limit = pdata->input_current_limit / 2;
@@ -590,16 +581,11 @@ static void swchg_select_cv(struct charger_manager *info)
 		}
 
 	/* dynamic cv*/
-#ifndef CONFIG_TARGET_PRODUCT_SELENECOMMON
-	constant_voltage = info->data.battery_cv;
-	mtk_get_dynamic_cv(info, &constant_voltage);
-#else
 	dynamic_cv = info->data.battery_cv;
 	mtk_get_dynamic_cv(info, &dynamic_cv);
-	if ( constant_voltage > dynamic_cv) {
+	if (constant_voltage > dynamic_cv) {
 			constant_voltage =  dynamic_cv;
 	}
-#endif
 
 	chr_err("%s, constant_voltage  = %d\n", __func__,constant_voltage);
 	charger_dev_set_constant_voltage(info->chg1_dev, constant_voltage);
@@ -620,10 +606,8 @@ static void dual_swchg_turn_on_charging(struct charger_manager *info)
 
 	if (is_dual_charger_supported(info) == false)
 		chg2_enable = false;
-#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
 	if(charger_manager_is_input_suspend() == true)
 		chg1_enable = false;
-#endif
 
 	if (swchgalg->state == CHR_ERROR) {
 		chg1_enable = false;

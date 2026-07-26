@@ -254,20 +254,6 @@ static struct device_attribute power_supply_attrs[] = {
 	POWER_SUPPLY_ATTR(input_current_now),
 	POWER_SUPPLY_ATTR(input_current_settled),
 	POWER_SUPPLY_ATTR(input_current_limit),
-#ifdef CONFIG_CHARGER_SC8551_CHARGER
-	POWER_SUPPLY_ATTR(sc_battery_present),
-	POWER_SUPPLY_ATTR(sc_vbus_present),
-	POWER_SUPPLY_ATTR(sc_battery_voltage),
-	POWER_SUPPLY_ATTR(sc_battery_current),
-	POWER_SUPPLY_ATTR(sc_battery_temperature),
-	POWER_SUPPLY_ATTR(sc_bus_voltage),
-	POWER_SUPPLY_ATTR(sc_bus_current),
-	POWER_SUPPLY_ATTR(sc_bus_temperature),
-	POWER_SUPPLY_ATTR(sc_die_temperature),
-	POWER_SUPPLY_ATTR(sc_alarm_status),
-	POWER_SUPPLY_ATTR(sc_fault_status),
-	POWER_SUPPLY_ATTR(sc_vbus_error_status),
-#endif
 	POWER_SUPPLY_ATTR(energy_full_design),
 	POWER_SUPPLY_ATTR(energy_empty_design),
 	POWER_SUPPLY_ATTR(energy_full),
@@ -303,9 +289,6 @@ static struct device_attribute power_supply_attrs[] = {
 	POWER_SUPPLY_ATTR(reverse_chg_cc),
 	POWER_SUPPLY_ATTR(reverse_chg_status),
 	POWER_SUPPLY_ATTR(reverse_limit),
-#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
-	POWER_SUPPLY_ATTR(charging_enabled),
-#endif
 	/* Local extensions */
 	POWER_SUPPLY_ATTR(usb_hc),
 	POWER_SUPPLY_ATTR(usb_otg),
@@ -326,9 +309,6 @@ static struct device_attribute power_supply_attrs[] = {
 	POWER_SUPPLY_ATTR(connector_temp),
 	POWER_SUPPLY_ATTR(vbus_disable),
 	POWER_SUPPLY_ATTR(chip_ok),
-#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
-	POWER_SUPPLY_ATTR(quick_charge_type),
-#endif
 	/* Local extensions of type int64_t */
 	POWER_SUPPLY_ATTR(charge_counter_ext),
 	/* Properties of type `const char *' */

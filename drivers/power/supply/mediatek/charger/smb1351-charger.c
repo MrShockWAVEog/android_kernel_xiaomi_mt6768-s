@@ -2664,7 +2664,6 @@ static int smb1351_enable_otg(struct charger_device *chg_dev, bool en)
 	return rc;
 }
 
-#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
 static int smb1351_do_event(struct charger_device *chg_dev, u32 event,
 			    u32 args)
 {
@@ -2685,7 +2684,6 @@ static int smb1351_do_event(struct charger_device *chg_dev, u32 event,
 
 	return 0;
 }
-#endif
 
 static int smb1351_set_otg_current(struct charger_device *chg_dev, u32 uA)
 {
@@ -2880,9 +2878,7 @@ static struct charger_ops smb1351_chg_ops = {
 	.enable_hvdcp_det = smb1351_enable_hvdcp_det,
 	.plug_in = smb1351_plug_in,
 	.enable_otg = smb1351_enable_otg,
-#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
 	.event = smb1351_do_event,
-#endif
 	.set_otg_current = smb1351_set_otg_current,
 	.check_hv_charging = smb1351_check_hv_charging,
 };

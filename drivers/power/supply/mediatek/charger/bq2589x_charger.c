@@ -883,10 +883,9 @@ static int bq2589x_get_charger_type(struct bq2589x *bq, enum charger_type *type)
 		POWER_SUPPLY_TYPE_USB_FLOAT,
 		POWER_SUPPLY_TYPE_USB_HVDCP,
 	};
-	/*K19A HQ-129052 K19A charger of thermal by wangqi at 2021/4/22 end*/
-	/*K19A k19A-143 K19A charger_type by wangqi at 2021/4/15 start*/
+
 	hvdcp_type_tmp = HVDCP_NULL;
-	/*K19A k19A-143 K19A charger_type by wangqi at 2021/4/15 end*/	
+
 	ret = bq2589x_read_byte(bq, BQ2589X_REG_0B, &reg_val);
 	if (ret)
 		return ret;
@@ -906,25 +905,19 @@ static int bq2589x_get_charger_type(struct bq2589x *bq, enum charger_type *type)
 	case BQ2589X_VBUS_TYPE_DCP:
 		chg_type = STANDARD_CHARGER;
 		break;
-/*K19A WXYFB-996 K19A quick charger bq25890 bring up by miaozhichao at 2021/3/29 start*/
 	case BQ2589X_VBUS_TYPE_HVDCP:
 		chg_type = HVDCP_CHARGER;
-/* Huaqin modify for WXYFB-592 by miaozhichao at 2021/3/29 start */
 		hvdcp_type_tmp = HVDCP;
-/* Huaqin modify for WXYFB-592 by miaozhichao at 2021/3/29 end */
 		break;
-/*K19A WXYFB-996 K19A quick charger bq25890 bring up by miaozhichao at 2021/3/29 end*/
 	case BQ2589X_VBUS_TYPE_UNKNOWN:
 		chg_type = NONSTANDARD_CHARGER;
 		break;
 	case BQ2589X_VBUS_TYPE_NON_STD:
 		chg_type = NONSTANDARD_CHARGER;
 		break;
-/* Huaqin add for HQ-136291 by miaozhichao at 2021/5/20 start */
 	case BQ2589X_VBUS_TYPE_OTG:
 		chg_type = CHARGER_UNKNOWN;
 		break;
-/* Huaqin add for HQ-136291 by miaozhichao at 2021/5/20 end */
 	default:
 		chg_type = NONSTANDARD_CHARGER;
 		break;
@@ -971,9 +964,6 @@ static int bq2589x_inform_charger_type_report(struct bq2589x *bq)
 		pr_notice("inform power supply online failed:%d\n", ret);
 
 	propval.intval = bq->chg_type;
-	if (propval.intval == HVDCP_CHARGER) {
-		propval.intval = STANDARD_CHARGER;
-	}
 
 	ret = power_supply_set_property(bq->psy,
 					POWER_SUPPLY_PROP_CHARGE_TYPE,

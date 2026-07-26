@@ -756,23 +756,21 @@ int charger_manager_set_input_current_limit(struct charger_consumer *consumer,
 }
 #endif
 
-#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
-int charger_manager_set_charging_current_thermal_limit(
- 	struct charger_manager *info, int idx, int charging_current)
- {
-
- 	if (info != NULL) {
- 		struct charger_data *pdata;
- 		pdata = &info->chg1_data;
- 		pdata->thermal_charging_current_limit = charging_current;
-		chr_err("%s: charging_current_limit:%d\n", __func__, charging_current);
- 		_mtk_charger_change_current_setting(info);
-		_wake_up_charger(info);
-		return 0;
- 	}
- 	return -EBUSY;
-}
-#endif
+// int charger_manager_set_charging_current_thermal_limit(
+//  	struct charger_manager *info, int idx, int charging_current)
+//  {
+// 
+//  	if (info != NULL) {
+//  		struct charger_data *pdata;
+//  		pdata = &info->chg1_data;
+//  		pdata->thermal_charging_current_limit = charging_current;
+// 		chr_err("%s: charging_current_limit:%d\n", __func__, charging_current);
+//  		_mtk_charger_change_current_setting(info);
+// 		_wake_up_charger(info);
+// 		return 0;
+//  	}
+//  	return -EBUSY;
+// }
 
 int charger_manager_set_charging_current_limit(
 	struct charger_consumer *consumer, int idx, int charging_current)
@@ -1004,16 +1002,10 @@ int charger_manager_set_input_suspend(int suspend)
 
 	if (suspend) {
 		charger_dev_set_suspend(pinfo->chg1_dev, true);
-#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
-		charger_dev_enable(pinfo->chg1_dev, false);
-#endif
 //		charger_dev_enable_powerpath(pinfo->chg1_dev, false);
 		pinfo->is_input_suspend = true;
 	} else {
 		charger_dev_set_suspend(pinfo->chg1_dev, false);
-#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
-		charger_dev_enable(pinfo->chg1_dev, true);
-#endif
 //		charger_dev_enable_powerpath(pinfo->chg1_dev, true);
 		pinfo->is_input_suspend = false;
 	}
@@ -1482,12 +1474,10 @@ void do_sw_jeita_state_machine(struct charger_manager *info)
 				info->data.temp_t4_thres);
 
 			sw_jeita->charging = false;
-#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
 		} else if (info->battery_temp >= 58) {
 			sw_jeita->charging = false;
 			sw_jeita->sm = TEMP_ABOVE_T4;
 			chr_err("[SW_JEITA]wlc now temprature is %d, te_thres_minus: %d !!\n",info->battery_temp, info->data.temp_t4_thres_minus_x_degree);
-#endif
 		} else {
 			chr_err("[SW_JEITA] Battery Temperature between %d and %d !!\n",
 				info->data.temp_t3_thres,
@@ -1496,87 +1486,32 @@ void do_sw_jeita_state_machine(struct charger_manager *info)
 			sw_jeita->sm = TEMP_T3_TO_T4;
 		}
 	} else if (info->battery_temp >= info->data.temp_t2_thres) {
-#ifndef CONFIG_TARGET_PRODUCT_SELENECOMMON
-		if (((sw_jeita->sm == TEMP_T3_TO_T4)
-		     && (info->battery_temp
-			 >= info->data.temp_t3_thres_minus_x_degree))
-		    || ((sw_jeita->sm == TEMP_T1_TO_T2)
-			&& (info->battery_temp
-			    <= info->data.temp_t2_thres_plus_x_degree))) {
-			chr_err("[SW_JEITA] Battery Temperature not recovery to normal temperature charging mode yet!!\n");
-		} else {
-#endif
 			chr_err("[SW_JEITA] Battery Normal Temperature between %d and %d !!\n",
 				info->data.temp_t2_thres,
 				info->data.temp_t3_thres);
 			sw_jeita->sm = TEMP_T2_TO_T3;
-#ifndef CONFIG_TARGET_PRODUCT_SELENECOMMON
-		}
-#endif
 	} else if (info->battery_temp >= info->data.temp_t1_thres) {
-#ifndef CONFIG_TARGET_PRODUCT_SELENECOMMON
-		if ((sw_jeita->sm == TEMP_T0_TO_T1
-		     || sw_jeita->sm == TEMP_BELOW_T0)
-		    && (info->battery_temp
-			<= info->data.temp_t1_thres_plus_x_degree)) {
-			if (sw_jeita->sm == TEMP_T0_TO_T1) {
-				chr_err("[SW_JEITA] Battery Temperature between %d and %d !!\n",
-					info->data.temp_t1_thres_plus_x_degree,
-					info->data.temp_t2_thres);
-			}
-			if (sw_jeita->sm == TEMP_BELOW_T0) {
-				chr_err("[SW_JEITA] Battery Temperature between %d and %d,not allow charging yet!!\n",
-					info->data.temp_t1_thres,
-					info->data.temp_t1_thres_plus_x_degree);
-				sw_jeita->charging = false;
-			}
-		} else {
-#endif
 			chr_err("[SW_JEITA] Battery Temperature between %d and %d !!\n",
 				info->data.temp_t1_thres,
 				info->data.temp_t2_thres);
 
 			sw_jeita->sm = TEMP_T1_TO_T2;
-#ifndef CONFIG_TARGET_PRODUCT_SELENECOMMON
-		}
-#endif
 	} else if (info->battery_temp >= info->data.temp_t0_thres) {
-#ifndef CONFIG_TARGET_PRODUCT_SELENECOMMON
-		if ((sw_jeita->sm == TEMP_BELOW_T0)
-		    && (info->battery_temp
-			<= info->data.temp_t0_thres_plus_x_degree)) {
-			chr_err("[SW_JEITA] Battery Temperature between %d and %d,not allow charging yet!!\n",
-				info->data.temp_t0_thres,
-				info->data.temp_t0_thres_plus_x_degree);
-
-			sw_jeita->charging = false;
-		} else {
-#endif
 			chr_err("[SW_JEITA] Battery Temperature between %d and %d !!\n",
 				info->data.temp_t0_thres,
 				info->data.temp_t1_thres);
 
 			sw_jeita->sm = TEMP_T0_TO_T1;
-#ifndef CONFIG_TARGET_PRODUCT_SELENECOMMON
-		}
-#endif
-#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
 	} else if (info->battery_temp >= info->data.temp_neg_10_thres) {
 			chr_err("[SW_JEITA] Battery Temperature between %d and %d !!\n",
 				info->data.temp_neg_10_thres,
 				info->data.temp_t0_thres);
 
 			sw_jeita->sm = TEMP_BELOW_T0;
-#endif
 	} else {
 		chr_err("[SW_JEITA] Battery below low Temperature(%d) !!\n",
-#ifndef CONFIG_TARGET_PRODUCT_SELENECOMMON
-			info->data.temp_t0_thres);
-		sw_jeita->sm = TEMP_BELOW_T0;
-#else
 			info->data.temp_neg_10_thres);
 		sw_jeita->sm = TEMP_BELOW_NEG_T0;
-#endif
 		sw_jeita->charging = false;
 	}
 #ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
@@ -1601,14 +1536,10 @@ void do_sw_jeita_state_machine(struct charger_manager *info)
 			sw_jeita->cc = info->data.jeita_temp_t0_to_t1_cc;
 			sw_jeita->cv = info->data.jeita_temp_t0_to_t1_cv;
 		} else if (sw_jeita->sm == TEMP_BELOW_T0) {
-#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
 			sw_jeita->cc = info->data.jeita_temp_below_t0_cc;
-#endif
 			sw_jeita->cv = info->data.jeita_temp_below_t0_cv;
-#ifdef CONFIG_TARGET_PRODUCT_SELENECOMMON
 		} else if (sw_jeita->sm == TEMP_BELOW_NEG_T0) {
 			sw_jeita->cv = info->data.jeita_temp_below_t0_cv;
-#endif
 		} else
 			sw_jeita->cv = info->data.battery_cv;
 	} else {
@@ -1866,11 +1797,7 @@ void mtk_charger_int_handler(void)
 	} else {
 		temp = battery_get_bat_temperature();
 		pr_err("dhx---temp:%d\n", temp);
-#ifndef CONFIG_TARGET_PRODUCT_SELENECOMMON
-		if (temp >= 0 && temp <= 60)
-#else
 		if (temp >= -10 && temp <= 60)
-#endif
 			charger_manager_notifier(pinfo, CHARGER_NOTIFY_START_CHARGING);
 	}
 
@@ -2843,11 +2770,7 @@ static int mtk_charger_parse_dt(struct charger_manager *info,
 	}
 
 	if (of_property_read_u32(np, "temp_neg_10_thres", &val) >= 0)
-#ifndef CONFIG_TARGET_PRODUCT_SELENECOMMON
 		info->data.temp_neg_10_thres = val;
-#else
-		info->data.temp_neg_10_thres = -10;
-#endif
 	else {
 		chr_err("use default TEMP_NEG_10_THRES:%d\n",
 			TEMP_NEG_10_THRES);
