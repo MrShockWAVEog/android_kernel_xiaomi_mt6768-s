@@ -61,32 +61,33 @@ EXPORT_SYMBOL_GPL(cpufreq_mtk_set_table);
 
 int is_freq_valid(int cluster, int freq) {
     struct cpufreq_frequency_table *pos;
-    int ret;
 
     /* 
      * Allow -1 frequency as that is
      * used to remove the limit.
      */
     if (freq == -1)
-        goto out;
+        return 1;
+
+    if (unlikely(!cpuftbl[cluster]))
+        return 0;
 
     cpufreq_for_each_valid_entry(pos, cpuftbl[cluster]) {
         if (pos->frequency == freq)
-            goto out;
+            return 1;
     }
 
-    ret = 1;
-
-out:
-    return ret;
+    return 0;
 }
 
 /* Updates CPU frequency for chosen cluster */
 void update_cpu_freq(int cluster)
 {
+    (void)cluster;
 
 #ifdef CONFIG_MTK_SCHED_BOOST
-    int sched_boost_type = (current_cpu_freq[cluster].min > 0 || current_cpu_freq[cluster].max > 0)
+    int sched_boost_type = (current_cpu_freq[LITTLE].min > 0 || current_cpu_freq[LITTLE].max > 0
+                            || current_cpu_freq[BIG].min > 0 || current_cpu_freq[BIG].max > 0)
                             ? SCHED_ALL_BOOST : SCHED_NO_BOOST;
 
     set_sched_boost(sched_boost_type);
