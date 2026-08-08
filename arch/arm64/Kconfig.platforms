@@ -304,6 +304,7 @@ config MACH_MT6771
 
 config MACH_MT6768
 	bool "MediaTek MT6768"
+	select ARM64_LSE_ATOMICS
 	select GENERIC_TIME
 	select GENERIC_CLOCKEVENTS
 	select ARCH_HAS_CPUFREQ
