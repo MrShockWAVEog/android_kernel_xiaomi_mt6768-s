@@ -1865,15 +1865,15 @@ static ssize_t reclaim_write(struct file *file, const char __user *buf,
 
 	mm = get_task_mm(task);
 	if (mm) {
-		struct mm_walk reclaim_walk = {
+		static const struct mm_walk_ops reclaim_ops = {
 			.pmd_entry = reclaim_pte_range,
-			.mm = mm,
+		};
+		static const struct mm_walk_ops deactivate_ops = {
+			.pmd_entry = deactivate_pte_range,
 		};
 
 		down_read(&mm->mmap_sem);
 		for (vma = mm->mmap; vma; vma = vma->vm_next) {
-			reclaim_walk.private = vma;
-
 			if (vma->vm_flags & VM_LOCKED)
 				continue;
 
@@ -1886,12 +1886,11 @@ static ssize_t reclaim_write(struct file *file, const char __user *buf,
 				continue;
 
 			if (!vma->vm_file)
-				reclaim_walk.pmd_entry = reclaim_pte_range;
+				walk_page_range(mm, vma->vm_start, vma->vm_end,
+						&reclaim_ops, vma);
 			else
-				reclaim_walk.pmd_entry = deactivate_pte_range;
-
-			walk_page_range(vma->vm_start, vma->vm_end,
-					&reclaim_walk);
+				walk_page_range(mm, vma->vm_start, vma->vm_end,
+						&deactivate_ops, vma);
 		}
 		flush_tlb_mm(mm);
 		up_read(&mm->mmap_sem);
