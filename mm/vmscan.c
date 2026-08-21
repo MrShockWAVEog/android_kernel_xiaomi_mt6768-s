@@ -3029,13 +3029,13 @@ static void reset_mm_stats(struct lruvec *lruvec, struct lru_gen_mm_walk *walk, 
 				   lruvec->mm_state.stats[hist][i] + walk->mm_stats[i]);
 			walk->mm_stats[i] = 0;
 		}
-	}
 
-	if (NR_HIST_GENS > 1 && last) {
-		hist = lru_hist_from_seq(lruvec->mm_state.seq[walk->aging_type] + 1);
+		if (NR_HIST_GENS > 1 && last) {
+			hist = lru_hist_from_seq(lruvec->mm_state.seq[walk->aging_type] + 1);
 
-		for (i = 0; i < NR_MM_STATS; i++)
-			WRITE_ONCE(lruvec->mm_state.stats[hist][i], 0);
+			for (i = 0; i < NR_MM_STATS; i++)
+				WRITE_ONCE(lruvec->mm_state.stats[hist][i], 0);
+		}
 	}
 }
 
