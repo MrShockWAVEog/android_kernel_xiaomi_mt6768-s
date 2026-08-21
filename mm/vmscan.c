@@ -2787,10 +2787,19 @@ static unsigned long evictable_min_seq(unsigned long *min_seq, int swappiness)
 
 static bool __maybe_unused seq_is_valid(struct lruvec *lruvec)
 {
-	/* see the comment on lru_gen_struct */
-	return get_nr_gens(lruvec, LRU_GEN_FILE) >= MIN_NR_GENS &&
-	       get_nr_gens(lruvec, LRU_GEN_FILE) <= get_nr_gens(lruvec, LRU_GEN_ANON) &&
-	       get_nr_gens(lruvec, LRU_GEN_ANON) <= MAX_NR_GENS;
+	int type;
+
+	/*
+	 * With re-swappiness, anon and file generations age independently,
+	 * so each type only needs to stay within its own range.
+	 */
+	for (type = 0; type < ANON_AND_FILE; type++) {
+		if (get_nr_gens(lruvec, type) < MIN_NR_GENS ||
+		    get_nr_gens(lruvec, type) > MAX_NR_GENS)
+			return false;
+	}
+
+	return true;
 }
 
 /******************************************************************************
