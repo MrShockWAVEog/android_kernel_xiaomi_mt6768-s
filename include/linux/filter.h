@@ -536,10 +536,12 @@ static inline bool insn_is_zext(const struct bpf_insn *insn)
 	})
 
 /* A struct sock_filter is architecture independent. */
+#ifdef CONFIG_COMPAT
 struct compat_sock_fprog {
 	u16		len;
 	compat_uptr_t	filter;	/* struct sock_filter * */
 };
+#endif
 
 struct sock_fprog_kern {
 	u16			len;
